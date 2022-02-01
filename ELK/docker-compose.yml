@@ -30,7 +30,7 @@ services:
     env_file:
       - .env
     environment:
-      - ELASTICSEARCH_HOSTS= '["http://elasticsearch:9200"]'
+      - ELASTICSEARCH_HOSTS=["http://elasticsearch:9200"]
       - monitoring.ui.container.elasticsearch.enabled=true
     networks:
       - elastic
