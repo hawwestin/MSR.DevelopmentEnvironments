@@ -4,8 +4,7 @@
 #
 http.host: "0.0.0.0"
 xpack.monitoring.enabled: true
-xpack.monitoring.elasticsearch.hosts: [ '${ELASTICSEARCH_HOSTS:localhost:9200}' ]
-
+xpack.monitoring.elasticsearch.hosts: ["${ELASTICSEARCH_HOSTS:localhost:9200}"]
 ## X-Pack security credentials
 #
 #xpack.monitoring.enabled: true

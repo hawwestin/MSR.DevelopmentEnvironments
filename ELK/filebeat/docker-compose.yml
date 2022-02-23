@@ -10,13 +10,13 @@ services:
       - ASPNETCORE_ENVIRONMENT=localhost
     volumes:
       - "applicationLogPath:/mnt/log:ro"
-      - "./filebeat.docker.yml:/usr/share/filebeat/filebeat.yml"  
+      - "./filebeat.docker.yml:/usr/share/filebeat/filebeat.yml"
       - "fbdata:/usr/share/filebeat/data/"
       - "./logs:/var/log/filebeat"
-        
+
 volumes:
-  fbdata: 
-    driver: local 
-  applicationLogPath: 
+  fbdata:
+    driver: local
+  applicationLogPath:
     external: true
-    driver: local 
+    driver: local

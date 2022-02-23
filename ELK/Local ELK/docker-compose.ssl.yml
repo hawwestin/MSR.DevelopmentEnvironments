@@ -19,10 +19,10 @@ services:
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - discovery.type=single-node
       - xpack.security.enabled=true
-#      - xpack.security.http.ssl.enabled=true
-#      - xpack.security.http.ssl.key=$CERTS_DIR/elasticsearch/elasticsearch.key
-#      - xpack.security.http.ssl.certificate_authorities=$CERTS_DIR/ca/ca.crt
-#      - xpack.security.http.ssl.certificate=$CERTS_DIR/elasticsearch/elasticsearch.crt
+      #  - xpack.security.http.ssl.enabled=true
+      #  - xpack.security.http.ssl.key=$CERTS_DIR/elasticsearch/elasticsearch.key
+      #  - xpack.security.http.ssl.certificate_authorities=$CERTS_DIR/ca/ca.crt
+      #  - xpack.security.http.ssl.certificate=$CERTS_DIR/elasticsearch/elasticsearch.crt
       - xpack.security.transport.ssl.enabled=true
       - xpack.security.transport.ssl.verification_mode=certificate
       - xpack.security.transport.ssl.certificate_authorities=$CERTS_DIR/ca/ca.crt
@@ -73,7 +73,7 @@ services:
     environment:
       - ELASTICSEARCH_HOSTS= ["http://elasticsearch:9200"]
       - monitoring.ui.container.elasticsearch.enabled=true
-      - XPACK_SECURITY_ENABLED=true 
+      - XPACK_SECURITY_ENABLED=true
       - ELASTICSEARCH_USERNAME=elastic
       - ELASTICSEARCH_PASSWORD=$ELASTIC_PASSWORD
       - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=config/certs/ca/ca.crt
