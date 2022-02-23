@@ -133,3 +133,5 @@ dmypy.json
 .idea/
 # Environments
 *.env
+# Notepad
+*.bak
