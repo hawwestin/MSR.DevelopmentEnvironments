@@ -132,6 +132,6 @@ dmypy.json
 # pycharm
 .idea/
 # Environments
-*.env
+.env.*
 # Notepad
 *.bak
