@@ -24,6 +24,7 @@ services:
 
 networks:
   elastic:
+    external: true
     driver: bridge
 
 volumes:
