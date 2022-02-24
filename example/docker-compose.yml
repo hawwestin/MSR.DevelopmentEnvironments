@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  msr:
+    image: msr
+    build:
+      context: .
+      dockerfile: ./Dockerfile
