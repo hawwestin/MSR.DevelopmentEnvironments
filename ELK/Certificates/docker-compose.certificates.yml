@@ -6,7 +6,7 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.16.3
     command: >
       bash -c '
-        if [[ ! -f /certs/bundle.zip ]]; then
+        if [[ ! -f /certs/bundle.zip || $REGENERATE_CERT ]]; then
           bin/elasticsearch-certutil cert --silent --pem --in config/certificates/$INSTANCES_FILE -out /certs/bundle.zip;           
         fi;
         unzip /certs/bundle.zip -d /certs;
