@@ -43,7 +43,8 @@ services:
     image: docker.elastic.co/kibana/kibana:${ELK_VERSION}
     container_name: kib01
     depends_on:
-      - es01
+      es01:
+        condition: service_healthy
     ports:
       - 5601:5601
     environment:
@@ -54,7 +55,8 @@ services:
       - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=config/certs/ca/ca.crt
       - ELASTICSEARCH_SSL_VERIFICATIONMODE=certificate
     volumes:
-      - kibdata:/usr/share/kibana/config/
+      - kibanaconfig:/usr/share/kibana/config/
+      - kibanadata:/usr/share/kibana/data
       - certs:/usr/share/kibana/config/certs/:ro
     env_file:
       - .env
@@ -66,7 +68,11 @@ networks:
     driver: bridge
 
 volumes:
+  kibanaconfig: 
+    driver: local
+  kibanadata:
+    driver: local
   data01:
     driver: local
-  certs: null
-  kibdata: null
+  certs: 
+    driver: local

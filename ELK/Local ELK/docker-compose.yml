@@ -35,13 +35,17 @@ services:
     networks:
       - elastic
     volumes:
-      - kibdata:/usr/share/kibana/config/
+      - kibanaconfig:/usr/share/kibana/config/
+      - kibanadata:/usr/share/kibana/data
 
 networks:
   elastic:
     driver: bridge
 
 volumes:
+  kibanaconfig: 
+    driver: local
+  kibanadata:
+    driver: local
   data01:
     driver: local
-  kibdata: null
