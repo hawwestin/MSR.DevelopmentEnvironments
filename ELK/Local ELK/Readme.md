@@ -1,5 +1,15 @@
 # Local host Elastic stack
 This directory holds a few version of elastic one node cluster security that can be configured for elastic search and kibana. 
+
+## WSL
+
+By default running Elastic on WSL will cause an error preventing it from running `max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]` 
+To fix it execute below command in powershell 
+```
+wsl -d docker-desktop
+sysctl -w vm.max_map_count=262144
+```
+
 ## Compose yamls
 
 `docker-compose.yml` Holds not secured configuration. For version below 8 it is valid and fastest way to set up and run local stack.
