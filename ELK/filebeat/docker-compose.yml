@@ -7,7 +7,7 @@ services:
     env_file:
       - .env
     environment:
-      - ASPNETCORE_ENVIRONMENT=localhost
+      - ENVIRONMENT=localhost
     volumes:
       - "applicationLogPath:/mnt/log:ro"
       - "./filebeat.docker.yml:/usr/share/filebeat/filebeat.yml"

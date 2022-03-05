@@ -60,7 +60,7 @@ processors:
       overwrite_keys: true
   - add_tags:
       target: "Environment"
-      tags: ["${ASPNETCORE_ENVIRONMENT}"]
+      tags: ["${ENVIRONMENT}"]
 
 #================================ Logging =====================================
 

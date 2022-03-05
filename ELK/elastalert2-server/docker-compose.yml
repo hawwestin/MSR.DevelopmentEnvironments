@@ -6,10 +6,10 @@ services:
    container_name: elastalert2-server
    image: karql/elastalert2-server:latest
    ports:
-    - "3030:3030"
-	  - "3333:3333"
-   volumes:    
-	  - ./config/elastalert.yaml:/opt/elastalert/config.yaml
+    - 3030:3030
+    - 3333:3333
+   volumes:
+    - ./config/elastalert.yaml:/opt/elastalert/config.yaml
     - ./config/elastalert-test.yaml:/opt/elastalert/config-test.yaml
     - ./config/config.json:/opt/elastalert-server/config/config.json
     - ./rules:/opt/elastalert/rules
@@ -17,7 +17,6 @@ services:
    networks:
     - elastic
 
-  
 networks:
  elastic:
    external: true
