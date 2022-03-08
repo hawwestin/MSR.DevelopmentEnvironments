@@ -34,19 +34,8 @@ services:
         condition: service_healthy
     ports:
       - 5601:5601
-    environment:
-      - ELASTICSEARCH_HOSTS=["https://es01:9200"]
-      - XPACK_SECURITY_ENABLED=true
-      - ELASTICSEARCH_USERNAME=elastic
-      - ELASTICSEARCH_PASSWORD=$ELASTIC_PASSWORD
-      - ELASTICSEARCH_SSL_CERTIFICATEAUTHORITIES=config/certs/ca/ca.crt
-      - ELASTICSEARCH_SSL_VERIFICATIONMODE=certificate
-      - SERVER_SSL_ENABLED=true
-      - SERVER_SSL_KEY=config/certs/kib01/kib01.key
-      - SERVER_SSL_CERTIFICATE=config/certs/kib01/kib01.crt
-      - SERVER_SSL_PASSWORD=${KIBANA_CERT_PASSWORD}
     volumes:
-      - kibanaconfig:/usr/share/kibana/config/
+      - ./kibana.5601.yml:/usr/share/kibana/config/kibana.yml
       - kibanadata:/usr/share/kibana/data
       - certs:/usr/share/kibana/config/certs/:ro
     env_file:
