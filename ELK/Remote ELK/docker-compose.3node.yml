@@ -1,7 +1,7 @@
 version: '2.2'
 services:
   es01:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.16.2
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELK_VERSION}
     container_name: es01
     environment:
       - node.name=es01
@@ -15,15 +15,15 @@ services:
         soft: -1
         hard: -1
     volumes:
+      - ./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
       - data01:/usr/share/elasticsearch/data
     ports:
       - 9200:9200
     networks:
       - elastic
-    restart: unless-stopped
 
   es02:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.16.2
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELK_VERSION}
     container_name: es02
     environment:
       - node.name=es02
@@ -37,13 +37,15 @@ services:
         soft: -1
         hard: -1
     volumes:
+      - ./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
       - data02:/usr/share/elasticsearch/data
+    ports:
+      - 9201:9200
     networks:
       - elastic
-    restart: unless-stopped
 
   es03:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.16.2
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELK_VERSION}
     container_name: es03
     environment:
       - node.name=es03
@@ -57,29 +59,33 @@ services:
         soft: -1
         hard: -1
     volumes:
+      - ./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
       - data03:/usr/share/elasticsearch/data
+    ports:
+      - 9202:9200
     networks:
       - elastic
-    restart: unless-stopped
 
   kib01:
-    image: kibana-plugin:7.16.2
+    image: docker.elastic.co/kibana/kibana:${ELK_VERSION}
     container_name: kib01
     depends_on:
-      es01:
-        condition: service_healthy
+      - es01
+      - es02
+      - es03
     ports:
       - 5601:5601
     environment:
       ELASTICSEARCH_HOSTS: '["http://es01:9200","http://es02:9200","http://es03:9200"]'
     volumes:
-      - /etc/elasticsearch/kib01/kibana.yml:/usr/share/kibana/config/kibana.yml
+      - kibanaconfig:/usr/share/kibana/config/
       - kibanadata:/usr/share/kibana/data
     networks:
       - elastic
-    restart: unless-stopped
 
 volumes:
+  kibanaconfig:
+    driver: local
   kibanadata:
     driver: local
   data01:
