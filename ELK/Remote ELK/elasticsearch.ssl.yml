@@ -98,3 +98,16 @@ cluster.initial_master_nodes: ["es01","es02", "es03"]
 xpack.monitoring.enabled: true
 xpack.watcher.enabled: false
 
+xpack.security:
+  enabled: true
+  transport.ssl:
+    enabled: true
+    verification_mode: certificate
+    certificate_authorities: ${CERTS_DIR}/ca/ca.crt
+    certificate: ${CERTS_DIR}/${node.name}/${node.name}.crt
+    key: ${CERTS_DIR}/${node.name}/${node.name}.key
+  http.ssl:
+    enabled: true
+    key: ${CERTS_DIR}/${node.name}/${node.name}.key
+    certificate: ${CERTS_DIR}/${node.name}/${node.name}.crt
+    certificate_authorities: ${CERTS_DIR}/ca/ca.crt
