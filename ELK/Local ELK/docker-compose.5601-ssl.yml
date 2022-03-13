@@ -47,9 +47,7 @@ networks:
   elastic:
     driver: bridge
 
-volumes:
-  kibanaconfig: 
-    driver: local
+volumes:  
   kibanadata:
     driver: local
   data01:

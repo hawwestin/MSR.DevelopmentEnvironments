@@ -39,8 +39,6 @@ services:
     volumes:
       - ./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
       - data02:/usr/share/elasticsearch/data
-    ports:
-      - 9201:9200
     networks:
       - elastic
 
@@ -61,8 +59,6 @@ services:
     volumes:
       - ./elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
       - data03:/usr/share/elasticsearch/data
-    ports:
-      - 9202:9200
     networks:
       - elastic
 
@@ -74,18 +70,14 @@ services:
       - es02
       - es03
     ports:
-      - 5601:5601
-    environment:
-      ELASTICSEARCH_HOSTS: '["http://es01:9200","http://es02:9200","http://es03:9200"]'
+      - 5601:5601    
     volumes:
-      - kibanaconfig:/usr/share/kibana/config/
+      - ./kibana.yml:/usr/share/kibana/config/kibana.yml
       - kibanadata:/usr/share/kibana/data
     networks:
       - elastic
 
 volumes:
-  kibanaconfig:
-    driver: local
   kibanadata:
     driver: local
   data01:
