@@ -1,5 +1,5 @@
-# Local host Elastic stack
-This directory holds a few version of elastic one node cluster security that can be configured for elastic search and kibana. 
+# Remote ready Elastic cluster
+This directory holds a version of elastic with and without security enabled.
 
 ## WSL
 
@@ -14,17 +14,13 @@ And for the persistence configuration
 echo "vm.max_map_count=262144" >> /etc/sysctl.conf
 ```
 
-
 ## Compose yamls
 
-`docker-compose.yml` Holds not secured configuration. For version below 8 it is valid and fastest way to set up and run local stack.
+`docker-compose.yml` Holds not secured configuration. For version below 8 it is valid and fastest way to set up and runing cluster.
 
-`docker-compose.9300-ssl.yml` Holds minimum security with password and transport layer between nodes on 9300 port. As this is one node instance it is rather an example of valid configraution. 
-**Please be advise** that password for admin account `elastic` need to be provided for all stack application like Kibana and Beats. Example generic password is provided via `.env` file
+`docker-compose.ssl.yml` Holds minimum security with password, transport layer ssl between nodes on 9300 port and https for 9200 port communication. To use this remember to use basic authorization user with password when you comunicate with elastic API directly. And do not forget to change HTTP 9200 to HTTPS in your favority tool 😉 Kiabana use https for 5601 port over generted wild card certificate. 
 
-`docker-compose.9200-ssl.yml` All benefits of 9300-ssl comose and https for 9200 port communication. After you use this please use basic security with password and user when you will comunicate with elastic API directly. And do not forget to change HTTP to HTTPS in your favority tool 😉
-
-`docker-compose.5601-ssl.yml` All benefits of 9200-ssl compose and https for 5601 Kibana web port over generted wild card certificate. 
+**Please be advise** that password for account need to be provided for all stack application like Kibana and Beats. Example generic password is provided via `.env` file for admin account `elastic`. After you log in to cluster you can change password to other build in users or create new one for kibana nad beats. 
 
 ## Configuration files 
 **.env**
