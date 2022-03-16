@@ -20,7 +20,7 @@ echo "vm.max_map_count=262144" >> /etc/sysctl.conf
 
 `docker-compose.ssl.yml` Holds minimum security with password, transport layer ssl between nodes on 9300 port and https for 9200 port communication. To use this remember to use basic authorization user with password when you comunicate with elastic API directly. And do not forget to change HTTP 9200 to HTTPS in your favority tool 😉 Kiabana use https for 5601 port over generted wild card certificate. 
 
-**Please be advise** that password for account need to be provided for all stack application like Kibana and Beats. Example generic password is provided via `.env` file for admin account `elastic`. After you log in to cluster you can change password to other build in users or create new one for kibana nad beats. 
+**Please be advise** Services like Kibana and Beats need accounts and password. Example generic password is provided via `.env` file for admin account `elastic`. After you log in to cluster you can change password to other built in users or create new one for kibana nad beats. 
 
 ## Configuration files 
 **.env**
