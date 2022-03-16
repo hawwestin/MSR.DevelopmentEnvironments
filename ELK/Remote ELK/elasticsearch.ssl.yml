@@ -103,11 +103,11 @@ xpack.security:
   transport.ssl:
     enabled: true
     verification_mode: certificate
-    certificate_authorities: ${CERTS_DIR}/ca/ca.crt
-    certificate: ${CERTS_DIR}/${node.name}/${node.name}.crt
-    key: ${CERTS_DIR}/${node.name}/${node.name}.key
+    certificate_authorities: /usr/share/elasticsearch/config/certificates/ca/ca.crt
+    certificate: /usr/share/elasticsearch/config/certificates/${node.name}/${node.name}.crt
+    key: /usr/share/elasticsearch/config/certificates/${node.name}/${node.name}.key
   http.ssl:
     enabled: true
-    key: ${CERTS_DIR}/${node.name}/${node.name}.key
-    certificate: ${CERTS_DIR}/${node.name}/${node.name}.crt
-    certificate_authorities: ${CERTS_DIR}/ca/ca.crt
+    key: /usr/share/elasticsearch/config/certificates/${node.name}/${node.name}.key
+    certificate: /usr/share/elasticsearch/config/certificates/${node.name}/${node.name}.crt
+    certificate_authorities: /usr/share/elasticsearch/config/certificates/ca/ca.crt
