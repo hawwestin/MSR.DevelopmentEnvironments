@@ -38,7 +38,7 @@ services:
     secrets:
       - MYSQL_PWD
     depends_on:
-      - db
+      - mariadb
   mariadb:
     image: jc21/mariadb-aria
     restart: unless-stopped
