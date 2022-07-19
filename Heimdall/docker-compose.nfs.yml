@@ -1,0 +1,32 @@
+version: "2.1" 
+services: 
+  heimdall: 
+    image: lscr.io/linuxserver/heimdall 
+    container_name: heimdall 
+    environment: 
+      - PUID=1005 
+      - PGID=100 
+      - TZ=Europe/Warsaw 
+    volumes:       
+      - config:/config
+      - nfs_config:/config/www 
+    ports: 
+      - 80:80 
+      - 443:443 
+    restart: unless-stopped 
+    networks: 
+      qnet-static: 
+        ipv4_address: 192.168.0.90
+
+volumes: 
+  nfs_config: 
+    driver: local 
+    driver_opts: 
+      type: nfs 
+      o: addr=127.0.0.1,rw,noatime,rsize=8192,wsize=8192,tcp,timeo=14,nfsvers=4  
+      device: ":/nfs-volumes/heimdall_config/www" 
+
+networks: 
+  qnet-static: 
+    external: 
+        name: qnet-static-eth0
