@@ -56,3 +56,19 @@ You can set any environment variable from a file by appending `__FILE` (double-u
       MYSQL_ROOT_PASSWORD__FILE: /run/secrets/DB_ROOT_PWD
       MYSQL_PASSWORD__FILE: /run/secrets/MYSQL_PWD
 ```
+
+# LetsEncrypt
+ 
+During optaining certificate for A record your DNS in cloudflare cannot be in `proxy` mode but in `DNS only` mode. So that letsencrypt can connect directly to you. After that you can switch it back to `proxy`. 
+If you try to obtain wildcard certificate for `*.mydomain.com` you need to create CloudFlare API token with permission to `Edit zone DNS`. Generated PAT is displayed only once so don't lose it and copy it directly to letsencrypt window in NGINXproxyManger. After few seconds you should have new certificate for wildcard domains that you can secure your local homelub serwices. 
+
+# Access List control
+
+**TODO Work in progress!!!!** 
+
+Ip address /24 mask for your local home lab /32 for single IP - your public so you and only you connect thorugh outside DNS. 
+
+# Tandem with Pihole DNS and Cname records. 
+
+Local network domain can be handled by pihole. But you probably cannot use second domain for local network. And using certificate for your public domain that is different than local will cause certificates errors. 
+Describe my solution here. 
