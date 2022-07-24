@@ -100,8 +100,8 @@ Recommended option is to use your public domain wildcard SSL. In such scenario a
 
 # Access List control
 
-!! Attention section work in progress. Due to unexpected results after enabling access control with enabled Proxy over Cloudflare section for IP based filtering I could not made to work. Probably need to be added list of CLoudFlare addresses to the list instead of your public IP address. 
-to be tested
+!! Attention section work in progress. Under Testing as some of the written down solutions are not 100% proven.\
+During testing I've got unexpected results after enabling access control with enabled Proxy over Cloudflare section for IP based filtering. Probably need to be added list of CLoudFlare addresses to the list instead of your public IP address. -> to be tested
 - Add ip filtering on cloudflare level to homelab public IP address. 
 ## User access 
 
@@ -110,5 +110,10 @@ Test of such pair connection on HomeLab RoadMap.
 
 ## IP address based filtering
 
-Ip address with /24 mask for your local homelab. Mask of /32 need to be used for single IP. For Example your public address.
+To filter out External IP addresses or range of addreses you can provide them with subnet mask. 
+### Subnet Mask
+Ip address ranges for last octet of IP address can be allowed with `/24` mask, exampl for your local homelab. \
+For single IP Mask of /32 must be used. For Example your public address.\
+### Externall access
+If you use Public cloud proxy it will use theirs public IP address instead of your public. In such case you need to find list of IP addresses and add all of them to NginxProxy list. To allow only your IP to access some(or all) of self hosted services you can find dns proxy filtering on your proxy provider. 
 
