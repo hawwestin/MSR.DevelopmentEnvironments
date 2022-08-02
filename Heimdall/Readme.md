@@ -60,7 +60,7 @@ Snippet for ports:
       - 443:443
 ```
 
-# Mash multi node  
+# Mesh multi node  
 If you wanna share configuration or have heimdalls accessible over few instances use NFS/CISF share to have one source of configs. 
 
 In Mesh configuration we use remote mounted data for container so all Heimdalls use the same not local data and which are always in sync. 
