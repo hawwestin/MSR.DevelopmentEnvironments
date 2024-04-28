@@ -8,8 +8,8 @@ References to official documentation
 - TechnoTim installation guide https://youtu.be/PA01Z6-z8Qs
 
 # First installation
-## Prepare new host for container
-### User for file ownership
+Prepare new host for container
+## User for file ownership
 
 References to linux user management articles. 
 - [How to Create Users in Linux (useradd Command)](https://linuxize.com/post/how-to-create-users-in-linux-using-the-useradd-command/)
@@ -193,7 +193,8 @@ Create a new network named `qnet-static-eth0`
 ```
 docker network create -d qnet --ipam-driver=qnet --ipam-opt=iface=eth0 --subnet=192.168.50.0/24 --gateway=192.168.50.1 qnet-static-eth0
 ```
-To have naming standard and ease of moving containers we can recreate networks to sth like: 
+
+In Case multiple NICs in server we can adjust command to use second one. Also to have naming standard and ease of moving containers we can recreate networks to sth like: 
 ```
 docker network create -d qnet --opt=iface=eth1 --ipam-driver=qnet --ipam-opt=iface=eth1 --subnet=192.168.50.0/24 --gateway=192.168.50.1 docker-static-eth1 
 ```
@@ -244,6 +245,13 @@ And for other stacks you can connect with below changing eth0 and eth1 chosing w
 ```
 networks: 
   qnet-static: 
-    external: 
-        name: qnet-static-eth0
+    name: docker-static-eth0
+    external: true
+```
+or another NIC
+```
+networks: 
+  qnet-static: 
+    name: docker-static-eth1
+    external: true
 ```

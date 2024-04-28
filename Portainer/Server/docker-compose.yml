@@ -1,0 +1,26 @@
+version: "3"
+services:
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    environment:
+      - TZ=Europe/Warsaw
+    volumes:
+      - portainer_portainer_data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 8000:8000
+      - 9000:9000
+    restart: always
+    networks:
+      qnet-static:
+        ipv4_address: 192.168.50.10
+
+volumes:
+    portainer_portainer_data:
+       external: true
+
+networks:
+  qnet-static:
+    name: docker-static-eth1
+    external: true
