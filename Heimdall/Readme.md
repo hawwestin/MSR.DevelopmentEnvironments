@@ -189,7 +189,7 @@ docker network create -d qnet --ipam-driver=qnet --ipam-opt=iface=eth0 qnet-dhcp
 ```
 
 ### Static mode
-Create a new network named `qnet-static-eth0`  
+Create a new network named `qnet-static-eth0`  QNAP nas NIC interface. 
 ```
 docker network create -d qnet --ipam-driver=qnet --ipam-opt=iface=eth0 --subnet=192.168.50.0/24 --gateway=192.168.50.1 qnet-static-eth0
 ```
@@ -205,14 +205,15 @@ docker network ls
 ```
 Docker Run example DHCP
 ```
-docker run --rm -it --net=qnet-dhcp-eth0 alpine ifconfig eth0
+docker run --rm -it --net=qnet-dhcp-eth0 alpine 
+ifconfig eth0
 ```
 Docker Run example Static
 ```
 docker run --rm -it --net=qnet-static-eth0 --ip=192.168.80.119 alpine ifconfig eth0
 ```
 
-Network creator from docker compose
+Network creator from docker compose for QNAP nas NIC
 ```
 version: '2' 
 services: 
