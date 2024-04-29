@@ -1,0 +1,28 @@
+version: "2.1"
+services:
+  heimdall:
+    image: lscr.io/linuxserver/heimdall
+    container_name: heimdall
+    environment:
+      - PUID=1005
+      - PGID=100
+      - TZ=Europe/Warsaw
+    volumes:      
+      - config:/config
+      - /share/CACHEDEV4_DATA/nfs-volumes/heimdall_config/www:/config/www
+    ports:
+      - 80:80
+      - 443:443
+    restart: always
+    networks:
+      docker-static:
+        ipv4_address: 192.168.50.9
+
+volumes:
+  config:
+
+
+networks:
+  docker-static:
+    external:
+        name: docker-static-eth1
