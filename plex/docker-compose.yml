@@ -1,7 +1,6 @@
-version: "2.1"
 services:
   plex:
-    image: lscr.io/linuxserver/plex:1.40.1
+    image: lscr.io/linuxserver/plex:1.40.2
     container_name: plex
     networks: 
       default:  
@@ -23,6 +22,5 @@ services:
     
 networks:
   default:
-    external:
-      name: docker-static-vlan100
-      
+    name: docker-static-vlan100
+    external: true
