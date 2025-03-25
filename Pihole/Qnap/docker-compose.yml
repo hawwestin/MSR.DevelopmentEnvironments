@@ -40,5 +40,5 @@ volumes:
        
 networks:
   qnet-static:
-    external:
-        name: docker-static-eth1
+    name: docker-static-bond0
+    external: true
