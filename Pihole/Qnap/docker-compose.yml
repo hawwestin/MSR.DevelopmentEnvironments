@@ -16,15 +16,14 @@ services:
       - "444:443/tcp"
     environment:
       TZ: 'Europe/Warsaw'
-      PIHOLE_DNS_: 127.0.0.1;8.8.8.8;8.8.4.4
+      PIHOLE_DNS_: 1.1.1.1;1.0.0.1
       VIRTUAL_HOST: pi.hole
       FTLCONF_LOCAL_IPV4: 192.168.50.8
       # WEBPASSWORD: 'set a secure password here or it will be random'
       WEBPASSWORD: $WEBPASSWORD
-    dns:      
-      - 127.0.0.1
+    dns:
       - 1.1.1.1
-      - 192.168.50.1
+      - 8.8.8.8
     # Volumes store your data between container upgrades
     volumes:
       - databases:/etc/pihole/
