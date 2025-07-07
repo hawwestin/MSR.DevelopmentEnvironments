@@ -1,4 +1,3 @@
-version: "2.1"
 services:
   heimdall:
     image: lscr.io/linuxserver/heimdall
@@ -13,9 +12,8 @@ services:
     ports:
       - 80:80
       - 443:443
-    restart: unless-stopped
+    restart: always
 
 
 volumes:
   config:
-  
