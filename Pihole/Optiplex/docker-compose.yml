@@ -1,0 +1,44 @@
+
+# More info at https://github.com/pi-hole/docker-pi-hole/ and https://docs.pi-hole.net/
+services:
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    restart: always
+    networks:
+      qnet-static:
+        ipv4_address: 192.168.50.14
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "80:80/tcp"
+      - "443:443/tcp"
+    environment:
+      TZ: 'Europe/Warsaw'
+      FTLCONF_dns_upstreams: '1.1.1.1;1.0.0.1'
+      FTLCONF_dns_listeningMode: 'all'
+      VIRTUAL_HOST: pi.hole
+      FTLCONF_LOCAL_IPV4: 192.168.50.14
+      # WEBPASSWORD: 'set a secure password here or it will be random'
+      FTLCONF_webserver_api_password: $WEBPASSWORD
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    # Volumes store your data between container upgrades
+    volumes:
+      - pihole_data:/etc/pihole/
+      - dnsmasq_config:/etc/dnsmasq.d/
+
+    # Recommended but not required (DHCP needs NET_ADMIN)
+    #   https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
+    #cap_add:
+    #  - NET_ADMIN
+       
+volumes:
+   pihole_data:
+   dnsmasq_config: 
+       
+networks:
+  qnet-static:
+    name: docker-static-eth0
+    external: true
