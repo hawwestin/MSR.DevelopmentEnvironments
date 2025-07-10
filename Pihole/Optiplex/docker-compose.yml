@@ -15,7 +15,7 @@ services:
       - "443:443/tcp"
     environment:
       TZ: 'Europe/Warsaw'
-      FTLCONF_dns_upstreams: '1.1.1.1;1.0.0.1'
+      # FTLCONF_dns_upstreams: '1.1.1.1;1.0.0.1'
       FTLCONF_dns_listeningMode: 'all'
       VIRTUAL_HOST: pi.hole
       FTLCONF_LOCAL_IPV4: 192.168.50.14
@@ -31,7 +31,10 @@ services:
 
     # Recommended but not required (DHCP needs NET_ADMIN)
     #   https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
-    #cap_add:
+    cap_add:
+       - NET_BIND_SERVICE
+       - SYS_NICE
+       - NET_RAW-
     #  - NET_ADMIN
        
 volumes:
