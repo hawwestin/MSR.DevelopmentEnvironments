@@ -2,12 +2,13 @@
 # More info at https://github.com/pi-hole/docker-pi-hole/ and https://docs.pi-hole.net/
 services:
   pihole:
-    container_name: pihole
+    container_name: pihole    
+    hostname: pihole3.msr.loc
     image: pihole/pihole:latest
     restart: always
     networks:
-      qnet-static:
-        ipv4_address: 192.168.50.14
+      static:
+        ipv4_address: 192.168.50.15
     ports:
       - "53:53/tcp"
       - "53:53/udp"
@@ -18,12 +19,12 @@ services:
       # FTLCONF_dns_upstreams: '1.1.1.1;1.0.0.1'
       FTLCONF_dns_listeningMode: 'all'
       VIRTUAL_HOST: pi.hole
-      FTLCONF_LOCAL_IPV4: 192.168.50.14
+      FTLCONF_LOCAL_IPV4: 192.168.50.15
       # WEBPASSWORD: 'set a secure password here or it will be random'
       FTLCONF_webserver_api_password: $WEBPASSWORD
-    dns:
-      - 1.1.1.1
-      - 8.8.8.8
+    # dns:
+    #   - 1.1.1.1
+    #   - 8.8.8.8
     # Volumes store your data between container upgrades
     volumes:
       - pihole_data:/etc/pihole/
@@ -34,7 +35,7 @@ services:
     cap_add:
        - NET_BIND_SERVICE
        - SYS_NICE
-       - NET_RAW-
+       - NET_RAW
     #  - NET_ADMIN
        
 volumes:
@@ -42,6 +43,6 @@ volumes:
    dnsmasq_config: 
        
 networks:
-  qnet-static:
+  static:
     name: docker-static-eth0
     external: true

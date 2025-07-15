@@ -15,7 +15,7 @@ services:
       TZ: 'Europe/Warsaw'
       PIHOLE_DNS_: 127.0.0.1;8.8.8.8;8.8.4.4
       VIRTUAL_HOST: pi2.hole
-      FTLCONF_LOCAL_IPV4: 192.168.50.20    
+      FTLCONF_LOCAL_IPV4: 192.168.50.20
       # WEBPASSWORD: 'set a secure password here or it will be random'
       WEBPASSWORD: $WEBPASSWORD
     # Volumes store your data between container upgrades
