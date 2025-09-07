@@ -1,0 +1,19 @@
+services:
+  heimdall:
+    image: lscr.io/linuxserver/heimdall
+    container_name: heimdall
+    environment:
+      - PUID=1005
+      - PGID=100
+      - TZ=Europe/Warsaw
+    volumes:
+      - config:/config
+      - /mnt/qnap/heimdall_config/www:/config/www
+    ports:
+      - 80:80
+      - 443:443
+    restart: always
+
+
+volumes:
+  config:
