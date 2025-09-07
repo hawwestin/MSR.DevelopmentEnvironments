@@ -1,6 +1,6 @@
-## testowanie MacVLAN z `netshoot`
+# Testing MacVLAN with `netshoot`
 
-### 1. Uruchom kontener `netshoot` w tej samej sieci `macvlan`
+### 1. Run the `netshoot` container in the same `macvlan` network
 
 ```bash
 docker run -it --rm \
@@ -9,60 +9,50 @@ docker run -it --rm \
   nicolaka/netshoot
 ```
 
->  Uwaga: upewnij się, że adres IP `192.168.50.98` nie jest zajęty w Twojej sieci LAN.
+> Note: Make sure that the IP address `192.168.50.98` is not already in use in your LAN.
 
-Or use host net
+Or use the host network:
 ```bash
-docker run -it --rm   --network host --cap-add=NET_ADMIN  nicolaka/netshoot
+docker run -it --rm --network host --cap-add=NET_ADMIN nicolaka/netshoot
 ```
 
 ---
 
-### 2.  Wewnątrz kontenera `netshoot` wykonaj testy
+### 2. Perform tests inside the `netshoot` container
 
-#### ✅ Sprawdź UDP DNS:
+#### ✅ Check UDP DNS:
 ```bash
 dig google.com @8.8.8.8
 ```
 
-#### ❌ Sprawdź TCP DNS:
+#### ❌ Check TCP DNS:
 ```bash
 dig +tcp google.com @8.8.8.8
 ```
 
-#### 📡 Sprawdź porty:
+#### 📡 Check ports:
 ```bash
 nc -vz 8.8.8.8 53
 ```
 
-#### 🔁 Sprawdź trasę:
+#### 🔁 Check the route:
 ```bash
 traceroute 8.8.8.8
 ```
 
-#### 📊 Sprawdź fragmentację i MTU:
+#### 📊 Check fragmentation and MTU:
 ```bash
 ping -M do -s 1472 8.8.8.8
 ```
 
 ---
 
-## 🧠 Co nam to powie?
+## What does this tell us?
 
-| Wynik | Wniosek |
-|-------|---------|
-| ✅ UDP działa, ❌ TCP nie | Problem z routingiem TCP w `macvlan`/`bond0` |
-| ❌ Oba nie działają | Problem z dostępem do Internetu z `macvlan` |
-| ✅ Oba działają | Problem leży w konfiguracji Pi-hole, nie sieci |
+| Result | Conclusion |
+|--------|------------|
+| ✅ UDP works, ❌ TCP doesn't | Problem with TCP routing in `macvlan`/`bond0` |
+| ❌ Both don't work | Problem with Internet access from `macvlan` |
+| ✅ Both work | The issue lies in Pi-hole configuration, not the network |
 
----
 
-## 🧩 Co dalej?
-
-Jeśli TCP DNS nie działa również z `netshoot`, to mamy twardy dowód, że `balance-xor` + `macvlan` + Twój switch **nie radzą sobie z routingiem TCP**. Wtedy warto:
-
-- Przełączyć bonding na `active-backup` (tryb 1),
-- Lub zrezygnować z `macvlan` i użyć `host` lub `bridge` z port forwardingiem,
-- Lub dodać dodatkowy interfejs `bridge` tylko dla Pi-hole.
-
----

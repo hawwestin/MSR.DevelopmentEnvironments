@@ -1,4 +1,8 @@
-`tcpdump` to doskonałe narzędzie, żeby potwierdzić, czy odpowiedzi TCP z serwera DNS wracają innym interfejsem niż wyszły, co byłoby dowodem na asymetryczny routing. Poniżej masz gotowe komendy i instrukcje, jak to przeprowadzić na QNAP-ie.
+Investigate issues with Pihole on QNAP node. Things to check
+- network BOND configuration
+- PIHOLE configuration post upgrade 5 to 6 
+- QNAP internal things 
+`tcpdump` is an excellent tool to confirm whether TCP responses from the DNS server return via a different interface than they were sent, which would be evidence of asymmetric routing. Below are ready-made commands and instructions on how to perform this on a QNAP.
 
 ---
 
@@ -6,37 +10,36 @@
 docker run -it --rm   --network host --cap-add=NET_ADMIN  nicolaka/netshoot
 ```
 
+## 🧰 Step 1: Identify physical interfaces
 
-## 🧰 Krok 1: Zidentyfikuj interfejsy fizyczne
+From your earlier `ip a`, it appears that the NAS uses:
 
-Z Twojego wcześniejszego `ip a` wynika, że NAS używa:
-
-- `eth0` i `eth1` jako interfejsy fizyczne (członkowie `bond0`)
-- `bond0` jako interfejs logiczny (LAG)
+- `eth0` and `eth1` as physical interfaces (members of `bond0`)
+- `bond0` as a logical interface (LAG)
 
 ---
 
-## 🧪 Krok 2: Uruchom `tcpdump` na obu interfejsach
+## 🧪 Step 2: Run `tcpdump` on both interfaces
 
-W dwóch osobnych terminalach (lub w tle), uruchom:
+In two separate terminals (or in the background), run:
 
-### 📥 Na `eth0`:
+### 📥 On `eth0`:
 ```bash
 sudo tcpdump -i eth0 tcp port 53 -n
 ```
 
-### 📥 Na `eth1`:
+### 📥 On `eth1`:
 ```bash
 sudo tcpdump -i eth1 tcp port 53 -n
 ```
 
-> Jeśli `tcpdump` nie jest zainstalowany, możesz użyć kontenera `netshoot` z `--network host` i dodać `--cap-add=NET_ADMIN`.
+> If `tcpdump` is not installed, you can use the `netshoot` container with `--network host` and add `--cap-add=NET_ADMIN`.
 
 ---
 
-## 🧪 Krok 3: W trzecim terminalu wykonaj zapytanie TCP DNS
+## 🧪 Step 3: Perform a TCP DNS query in a third terminal
 
-Z kontenera `netshoot` (w trybie `host`):
+From the `netshoot` container (in `host` mode):
 
 ```bash
 dig +tcp google.com @8.8.8.8
@@ -44,85 +47,86 @@ dig +tcp google.com @8.8.8.8
 
 ---
 
-## 🔍 Krok 4: Obserwuj
+## 🔍 Step 4: Observe
 
-Zwróć uwagę na:
+Pay attention to:
 
-- Na którym interfejsie wychodzi pakiet `SYN` do 8.8.8.8:53
-- Na którym interfejsie (jeśli w ogóle) pojawia się odpowiedź `SYN-ACK` z 8.8.8.8
-
----
-
-## 🧠 Co może się okazać?
-
-| Obserwacja | Wniosek |
-|------------|---------|
-| SYN i SYN-ACK na tym samym interfejsie | Routing OK |
-| SYN wychodzi `eth0`, ale SYN-ACK wraca `eth1` (lub odwrotnie) | 🔥 Asymetryczny routing — `balance-xor` źle rozdziela ruch |
-| SYN wychodzi, ale brak SYN-ACK | Odpowiedź zablokowana lub odrzucona przez NAS/switch |
+- Which interface sends the `SYN` packet to 8.8.8.8:53
+- Which interface (if any) receives the `SYN-ACK` response from 8.8.8.8
 
 ---
 
-## 🧭 Co dalej?
+## 🧠 What might you find?
 
-Jeśli potwierdzisz asymetrię, to masz twardy dowód, że tryb `balance-xor` jest winny. Wtedy przełączenie na `active-backup` lub zmiana algorytmu agregacji na switchu (`MAC SA & DA`) to jedyne sensowne rozwiązania.
+| Observation | Conclusion |
+|-------------|------------|
+| SYN and SYN-ACK on the same interface | Routing is OK |
+| SYN leaves `eth0`, but SYN-ACK returns on `eth1` (or vice versa) | 🔥 Asymmetric routing — `balance-xor` is misrouting traffic |
+| SYN is sent, but no SYN-ACK is received | Response is blocked or rejected by NAS/switch |
 
-Chcesz, żebym pomógł Ci zinterpretować wynik `tcpdump`, jeśli go wrzucisz tutaj?
+---
+
+## 🧭 Next steps?
+
+If you confirm asymmetry, you have solid proof that the `balance-xor` mode is the culprit. Switching to `active-backup` or changing the aggregation algorithm on the switch (`MAC SA & DA`) are the only viable solutions.
+
 
 # ######################################
 
-Doskonała robota, Michał — te logi z `tcpdump` są absolutnie jednoznaczne. Mamy tu **książkowy przypadek asymetrycznego routingu TCP**, który tłumaczy wszystkie problemy z DNS przez TCP w Twoim środowisku.
+These `tcpdump` logs are absolutely conclusive. We have a **textbook case of asymmetric TCP routing**, which explains all the DNS over TCP issues in your environment.
 
 ---
 
-## 🧠 Co pokazuje `tcpdump`?
+## 🧠 What does `tcpdump` show?
 
-### 🔍 Na interfejsie `eth1` (wychodzące):
-- Widzimy pakiety TCP `SYN` i `PUSH` z NAS-a (192.168.50.247) do 8.8.8.8:53.
-- NAS wysyła zapytania DNS przez TCP poprawnie.
+### 🔍 On the `eth1` interface (outgoing):
+- We see TCP `SYN` and `PUSH` packets from the NAS (192.168.50.247) to 8.8.8.8:53.
+- The NAS is sending DNS queries over TCP correctly.
 
-### 🔍 Na interfejsie `eth0` (przychodzące):
-- Widzimy odpowiedzi `SYN-ACK` z 8.8.8.8 do NAS-a.
-- Ale NAS **nie odpowiada** na te pakiety — nie ma `ACK`, nie ma dalszej komunikacji.
-
----
-
-## 🔥 Co to oznacza?
-
-- Pakiet `SYN` wychodzi przez `eth1`, ale odpowiedź `SYN-ACK` wraca przez `eth0`.
-- NAS (lub jego stos TCP/IP) **odrzuca odpowiedź**, bo nie spodziewa się jej na tym interfejsie.
-- To klasyczny objaw **asymetrycznego routingu**, który występuje w trybie `balance-xor` przy nieoptymalnym algorytmie haszowania.
+### 🔍 On the `eth0` interface (incoming):
+- We see `SYN-ACK` responses from 8.8.8.8 to the NAS.
+- But the NAS **does not respond** to these packets — no `ACK`, no further communication.
 
 ---
 
-## ✅ Potwierdzona diagnoza
+## 🔥 What does this mean?
 
-> 🔴 Twój NAS w trybie `balance-xor` rozdziela pakiety TCP w sposób niespójny — wysyła jednym interfejsem, a odbiera drugim. To łamie zasady sesji TCP i powoduje błędy DNS przez TCP.
-
----
-
-## 🛠️ Co teraz?
-
-### 🔧 Opcja 1: Zmień tryb agregacji portów na switchu
-
-Na switchu Zyxel ustaw algorytm LAG na **MAC SA & DA** (źródłowy i docelowy MAC). To zwiększa szansę, że pakiety TCP i ich odpowiedzi trafią tą samą ścieżką.
-
-### 🔁 Opcja 2: Przełącz NAS na tryb `active-backup`
-
-W QNAP GUI:
-- Panel Sterowania → Sieć i Przełącznik → Port Trunking
-- Edytuj LAG → Tryb: **Failover (Active-Backup)**
-
-To **eliminuje całkowicie asymetrię** — tylko jeden interfejs aktywny, drugi w zapasie.
+- The `SYN` packet leaves via `eth1`, but the `SYN-ACK` response returns via `eth0`.
+- The NAS (or its TCP/IP stack) **rejects the response** because it does not expect it on this interface.
+- This is a classic symptom of **asymmetric routing**, which occurs in `balance-xor` mode with a suboptimal hashing algorithm.
 
 ---
 
-## 🧪 Po zmianie:
+## ✅ Confirmed diagnosis
 
-- Uruchom ponownie `netshoot` w trybie `host`
-- Wykonaj `dig +tcp google.com @8.8.8.8`
-- Jeśli działa — problem rozwiązany
+> 🔴 Your NAS in `balance-xor` mode is splitting TCP packets inconsistently — sending via one interface and receiving via another. This breaks TCP session rules and causes DNS over TCP errors.
 
 ---
 
-Chcesz, żebym przygotował checklistę kroków w QNAP GUI lub pomógł Ci przetestować inne konfiguracje bonding?
+## 🛠️ What now?
+
+### 🔧 Option 1: Change port aggregation mode on the switch
+
+On the Zyxel switch, set the LAG algorithm to **MAC SA & DA** (source and destination MAC). This increases the likelihood that TCP packets and their responses follow the same path.
+
+### 🔁 Option 2: Switch the NAS to `active-backup` mode
+
+In the QNAP GUI:
+- Control Panel → Network & Virtual Switch → Port Trunking
+- Edit LAG → Mode: **Failover (Active-Backup)**
+
+This **completely eliminates asymmetry** — only one interface is active, the other is on standby.
+
+---
+
+## 🧪 After the change:
+
+- Restart `netshoot` in `host` mode
+- Perform `dig +tcp google.com @8.8.8.8`
+- If it works — problem solved
+
+---
+
+# Cclussions after GPT session
+Non of the above was the main culprit. during upgrade pihole from 5 to 6 they added and by default enable IPV6. 
+After disabling this feature Pihole log stopped logging issues. 

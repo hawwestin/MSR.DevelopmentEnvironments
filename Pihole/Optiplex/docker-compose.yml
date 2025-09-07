@@ -6,9 +6,6 @@ services:
     hostname: pihole3.msr.loc
     image: pihole/pihole:latest
     restart: always
-    networks:
-      static:
-        ipv4_address: 192.168.50.15
     ports:
       - "53:53/tcp"
       - "53:53/udp"
@@ -18,7 +15,7 @@ services:
       TZ: 'Europe/Warsaw'
       # FTLCONF_dns_upstreams: '1.1.1.1;1.0.0.1'
       FTLCONF_dns_listeningMode: 'all'
-      VIRTUAL_HOST: pi.hole
+      VIRTUAL_HOST: pi3.hole
       FTLCONF_LOCAL_IPV4: 192.168.50.15
       # WEBPASSWORD: 'set a secure password here or it will be random'
       FTLCONF_webserver_api_password: $WEBPASSWORD
@@ -42,7 +39,3 @@ volumes:
    pihole_data:
    dnsmasq_config: 
        
-networks:
-  static:
-    name: docker-static-eth0
-    external: true

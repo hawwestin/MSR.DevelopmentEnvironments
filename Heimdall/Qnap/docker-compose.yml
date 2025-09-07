@@ -1,4 +1,3 @@
-version: "2.1"
 services:
   heimdall:
     image: lscr.io/linuxserver/heimdall
@@ -7,7 +6,7 @@ services:
       - PUID=1005
       - PGID=100
       - TZ=Europe/Warsaw
-    volumes:      
+    volumes:
       - config:/config
       - /share/CACHEDEV4_DATA/nfs-volumes/heimdall_config/www:/config/www
     ports:
