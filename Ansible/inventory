@@ -1,0 +1,68 @@
+# Newer add one IP address to more than two groups. 
+# As variable squashing are merged in ASCII order.
+# Even If variable is in different group that is not executed
+# ansible WILL use last loaded value for that host :/
+# https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html#how-variables-are-merged  
+
+# New host provisioning 
+[new] 
+
+
+[new:vars]
+ansible_user=root
+remote_user=root
+ansible_ssh_user=root
+;ansible_ssh_password= ; use -k to ask for password
+;ansible_become_pass= ; use -K to ask for password if not root.
+
+[testing]
+192.168.50.51
+192.168.50.52
+192.168.50.60
+192.168.50.61
+
+# [testing:vars]
+# remote_user=ansible
+# ansible_ssh_user=ansible
+# ansible_become_user=root
+# ansible_ssh_private_key_file= ~/.ssh/id_rsa
+# ansible_become_method = su
+; ansible_python_interpreter= /usr/bin/python3
+
+[lxc]
+192.168.50.11
+192.168.50.12
+192.168.50.13
+
+# [lxc:vars]
+# remote_user=ansible
+# ansible_ssh_user=ansible
+# ansible_become_user=root
+# ansible_ssh_private_key_file= ~/.ssh/id_rsa
+# ansible_become_method = su
+
+[vm_linux]
+192.168.50.1
+192.168.50.100
+
+[vm_linux:vars]
+ansible_user=notset
+ansible_ssh_private_key_file=~/.ssh/id_rsa
+
+##################
+; Danger ZONE! 
+[proxmox] 
+192.168.50.5
+192.168.50.6
+
+[proxmox:vars]
+ansible_user=notset
+ansible_ssh_private_key_file=~/.ssh/id_rsa
+
+[qnap]
+192.168.50.247
+
+[qnap:vars]
+ansible_user=notset
+ansible_ssh_private_key_file=~/.ssh/id_rsa
+
