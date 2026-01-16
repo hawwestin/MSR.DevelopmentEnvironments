@@ -1,0 +1,15 @@
+---
+- name: Pobierz konfigurację NUT z Raspberry Pi
+  hosts: rpi_ups
+  become: yes  # Używa sudo, aby mieć dostęp do /etc/nut/
+  tasks:
+    - name: Pobieranie plików konfiguracyjnych
+      ansible.builtin.fetch:
+        src: "/etc/nut/{{ item }}"
+        dest: "./backup/raspberry_pi/nut/"
+        flat: yes
+      loop:
+        - ups.conf
+        - upsd.conf
+        - upsmon.conf
+        - nut.conf
