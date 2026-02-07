@@ -1,0 +1,67 @@
+---
+services:
+  homeassistant:
+    container_name: homeassistant
+    networks:
+      # Add the container to the IOT network
+      - homeassistant
+    image: ghcr.io/home-assistant/home-assistant:stable
+    depends_on:
+      - mqtt
+      - zigbee2mqtt
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      # Move the Home Assistant configuration directory to a /mnt/docker-data/home-assistant/config directory on the host
+      - ./home-assistant/config:/config
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+    restart: unless-stopped
+    ports:
+      - 8123:8123
+  mqtt:
+    container_name: mqtt
+    networks:
+      - homeassistant
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+    image: eclipse-mosquitto:latest
+    restart: unless-stopped
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ./mqtt/data:/mosquitto
+    ports:
+      - 1883:1883
+      - 9001:9001
+    command: mosquitto -c /mosquitto-no-auth.conf
+
+  zigbee2mqtt:
+    container_name: zigbee2mqtt
+    networks:
+      # Add the container to the IOT network
+      - homeassistant
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+    restart: unless-stopped
+    image: koenkk/zigbee2mqtt:latest
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      # Move the Zigbee2MQTT data directory to a /mnt/docker-data/zigbee2mqtt/data directory on the host
+      - ./zigbee2mqtt/data:/app/data
+    ports:
+      - 8080:8080
+    group_add:
+      - dialout
+    user: 1000:1000
+    devices:
+      # Pass the Zigbee adapter through to the container using the --device flag
+      - /dev/ttyUSB-Zigbee:/dev/ttyUSB-Zigbee
+
+networks:
+  default:
+    name: homeassistant

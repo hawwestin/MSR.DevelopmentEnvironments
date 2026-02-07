@@ -7,7 +7,11 @@
     - [Z2M Linux plain installation and configuration](https://www.zigbee2mqtt.io/guide/installation/01_linux.html#configuring) 
     - [Z2M Docker](https://www.zigbee2mqtt.io/guide/installation/02_docker.html)
     - [Z2M docker-compose](https://www.zigbee2mqtt.io/guide/installation/02_docker.html#docker-compose)
+    - [General limitations that apply to all Zigbee implementations](https://www.zigbee2mqtt.io/guide/faq/#what-does-and-does-not-require-repairing-of-all-devices)
 - Github
     - https://github.com/Koenkk/zigbee2mqtt 
     - https://github.com/eclipse-mosquitto/mosquitto
     - https://github.com/home-assistant/core 
+
+
+# LXC approach     

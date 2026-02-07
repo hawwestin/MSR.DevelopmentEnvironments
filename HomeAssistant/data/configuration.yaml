@@ -1,0 +1,19 @@
+version: 5
+mqtt:
+    base_topic: zigbee2mqtt
+    # Set the MQTT server to the hostname of the MQTT container defined in the docker-compose.yml file
+    server: mqtt://mqtt:1883
+serial:
+    # Set the serial port to the path of the Zigbee adapter on the host machine, 
+    # which is passed through to the container using a volume in the docker-compose.yml file
+    port: /dev/ttyUSB-Zigbee
+    adapter: ember
+advanced:
+    channel: 11
+    network_key: GENERATE
+    pan_id: GENERATE
+    ext_pan_id: GENERATE
+frontend:
+    enabled: true
+homeassistant:
+    enabled: true
