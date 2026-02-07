@@ -1,4 +1,5 @@
 ---
+name: homeassistant
 services:
   homeassistant:
     container_name: homeassistant
@@ -12,14 +13,14 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
-      # Move the Home Assistant configuration directory to a /mnt/docker-data/home-assistant/config directory on the host
-      - ./home-assistant/config:/config
+      # Use the Home Assistant configuration directory on /mnt/docker-data/home-assistant/config on the host to persist the Home Assistant configuration and data
+      - /mnt/docker-data/home-assistant/config:/config
     environment:
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}
     restart: unless-stopped
     ports:
-      - 8123:8123
+      - 80:8123
   mqtt:
     container_name: mqtt
     networks:
@@ -32,10 +33,11 @@ services:
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
-      - ./mqtt/data:/mosquitto
-    ports:
-      - 1883:1883
-      - 9001:9001
+      # Use the MQTT data directory on /mnt/docker-data/mqtt/data on the host to persist the MQTT configuration and data
+      - /mnt/docker-data/mqtt:/mosquitto
+    # ports:
+      #- 1883:1883
+      #- 9001:9001
     command: mosquitto -c /mosquitto-no-auth.conf
 
   zigbee2mqtt:
@@ -47,12 +49,12 @@ services:
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}
     restart: unless-stopped
-    image: koenkk/zigbee2mqtt:latest
+    image: ghcr.io/koenkk/zigbee2mqtt:latest
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
-      # Move the Zigbee2MQTT data directory to a /mnt/docker-data/zigbee2mqtt/data directory on the host
-      - ./zigbee2mqtt/data:/app/data
+      # Use the Zigbee2MQTT data directory on /mnt/docker-data/zigbee2mqtt/data on the host to persist the Zigbee2MQTT configuration and data
+      - /mnt/docker-data/zigbee2mqtt/data:/app/data
     ports:
       - 8080:8080
     group_add:
@@ -63,5 +65,5 @@ services:
       - /dev/ttyUSB-Zigbee:/dev/ttyUSB-Zigbee
 
 networks:
-  default:
+  homeassistant:
     name: homeassistant

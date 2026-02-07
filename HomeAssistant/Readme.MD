@@ -12,6 +12,14 @@
     - https://github.com/Koenkk/zigbee2mqtt 
     - https://github.com/eclipse-mosquitto/mosquitto
     - https://github.com/home-assistant/core 
+- Home Assistant documentation
+    - [Getting started](https://www.home-assistant.io/getting-started/)
+- MQTT documentation
+    - Official page https://mqtt.org/    
+    - [Open Source MQTT Mosquitto](https://www.mosquitto.org/)
+    - [Docker image](https://hub.docker.com/_/eclipse-mosquitto)
+    - [mosquitto.conf man page](https://www.mosquitto.org/man/mosquitto-conf-5.html)
+
 
 
 # LXC approach     
