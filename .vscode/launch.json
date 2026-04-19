@@ -7,19 +7,41 @@
         {
             "type": "bashdb",
             "request": "launch",
-            "name": "Debug Bash Script",
+            "name": "Debug Bash Script plain",
             "program": "${file}",
             "args": []
         },
-        {
-            "name": "Run Bash Script",
-            "type": "node", // Prosty trick, by użyć zintegrowanego terminala
+        { // works 
+            "type": "bashdb",
             "request": "launch",
-            "runtimeExecutable": "bash",
-            "runtimeArgs": [
-                "${file}"
-            ],
-            "console": "integratedTerminal"
-        }
+            "name": "Debug Bash Script",
+            "program": "${file}",
+            "args": [],
+            "stopOnEntry": false,
+            "trace": true,
+            "terminalKind": "integrated",
+            "env": {},
+        },
+        // { // close terminal after execution
+        //     "name": "Run Bash Script",
+        //     "type": "node", // Prosty trick, by użyć zintegrowanego terminala
+        //     "request": "launch",
+        //     "runtimeExecutable": "bash",
+        //     "runtimeArgs": [
+        //         "${file}"
+        //     ],
+        //     "console": "integratedTerminal"
+        // },
+        // { // close terminal after execution
+        //     "name": "Run Bash Script (Simple)",
+        //     "type": "node", // Używamy node jako wyzwalacza, bo jest stabilny w VS Code
+        //     "request": "launch",
+        //     "runtimeExecutable": "bash",
+        //     "runtimeArgs": [
+        //         "${file}"
+        //     ],
+        //     "console": "integratedTerminal",
+        //     "internalConsoleOptions": "neverOpen"
+        // }
     ]
 }
