@@ -1,0 +1,25 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "bashdb",
+            "request": "launch",
+            "name": "Debug Bash Script",
+            "program": "${file}",
+            "args": []
+        },
+        {
+            "name": "Run Bash Script",
+            "type": "node", // Prosty trick, by użyć zintegrowanego terminala
+            "request": "launch",
+            "runtimeExecutable": "bash",
+            "runtimeArgs": [
+                "${file}"
+            ],
+            "console": "integratedTerminal"
+        }
+    ]
+}

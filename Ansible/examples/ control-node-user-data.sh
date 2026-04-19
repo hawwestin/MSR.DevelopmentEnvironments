@@ -1,11 +1,15 @@
 #!/bin/sh 
+# Modern DevOps Practices - Chapter 9
 # https://play.google.com/books/reader?id=B4o8NgAAAEAJ&pg=GBS.PA306.w.0.0.0.1_144
+# This script sets up the Ansible control node user .
+# configures passwordless SSH access to the managed nodes (web and db VMs, and rpi_ups).
 sudo useradd -m ansible_mgr
 echo 'ansible_mgr ALL=(ALL) NOPASSWD:ALL' | sudo tee -a /etc/sudoers
 sudo su - ansible_mgr << EOF
 # ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa
 ssh-keygen -t ed25519 -C "ansible-homelab" -f ~/.ssh/id_ansible
 sleep 120
+# modify it to add the web and db VMs to the known_hosts file, so that we can ssh into them without being prompted to accept the host key.
 ssh-keyscan -H web >> ~/.ssh/known_hosts
 ssh-keyscan -H db >> ~/.ssh/known_hosts
 # Installs the sshpass utility to allow for sending the ssh public key to the web and db VMs

@@ -1,0 +1,1 @@
+ansible -i Ansible/inventory --list-hosts all

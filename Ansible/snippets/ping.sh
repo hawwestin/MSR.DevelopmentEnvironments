@@ -1,0 +1,1 @@
+ansible -i Ansible/inventory homelab -m ping
