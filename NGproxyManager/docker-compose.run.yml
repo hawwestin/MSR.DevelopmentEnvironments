@@ -1,12 +1,10 @@
-version: "3.7"
-
 secrets:
   # Secrets are single-line text files where the sole content is the secret
   # Paths in this example assume that secrets are kept in local folder called ".secrets"
   DB_ROOT_PWD:
-    file: .secrets/db_root_pwd.txt
+    file: /opt/docker/ngproxymanager/db_root_pwd.txt
   MYSQL_PWD:
-    file: .secrets/mysql_pwd.txt
+    file: /opt/docker/ngproxymanager/mysql_pwd.txt
 
 services:
   nginx-proxy-manager:
@@ -38,13 +36,7 @@ services:
     secrets:
       - MYSQL_PWD
     depends_on:
-      mariadb:
-        condition: service_healthy
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+      - mariadb
   mariadb:
     image: jc21/mariadb-aria
     restart: unless-stopped
@@ -69,7 +61,3 @@ volumes:
   mariadbdata: 
     driver: local
 
-networks:
-  default:
-    name: ngproxy
-    external: true

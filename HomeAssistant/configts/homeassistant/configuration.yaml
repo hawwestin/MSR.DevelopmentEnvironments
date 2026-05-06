@@ -1,0 +1,16 @@
+# Loads default set of integrations. Do not remove.
+default_config:
+
+# Load frontend themes from the themes folder
+frontend:
+  themes: !include_dir_merge_named themes
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 192.168.100.1  # Type her IP of pfSense (interface for HA network)
+    - 127.0.0.1    # optional local loopback address if you have reverse proxy running on the same host as HA

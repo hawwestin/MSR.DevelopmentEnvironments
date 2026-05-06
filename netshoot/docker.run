@@ -1,6 +1,6 @@
 docker run -it --rm \
   --network docker-static-bond0 \
-  --ip 192.168.50.98 \
+  --ip 192.168.50.90 \
   nicolaka/netshoot
 
 docker run -it --rm   --network host --cap-add=NET_ADMIN  nicolaka/netshoot

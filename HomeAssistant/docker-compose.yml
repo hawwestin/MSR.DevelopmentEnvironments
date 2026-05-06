@@ -1,0 +1,69 @@
+---
+name: homeassistant
+services:
+  homeassistant:
+    container_name: homeassistant
+    networks:
+      # Add the container to the IOT network
+      - homeassistant
+    image: ghcr.io/home-assistant/home-assistant:stable
+    depends_on:
+      - mqtt
+      - zigbee2mqtt
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      # Use the Home Assistant configuration directory on /mnt/docker-data/home-assistant/config on the host to persist the Home Assistant configuration and data
+      - /mnt/docker-data/home-assistant/config:/config
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+    restart: unless-stopped
+    ports:
+      - 80:8123
+  mqtt:
+    container_name: mqtt
+    networks:
+      - homeassistant
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+    image: eclipse-mosquitto:latest
+    restart: unless-stopped
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      # Use the MQTT data directory on /mnt/docker-data/mqtt/data on the host to persist the MQTT configuration and data
+      - /mnt/docker-data/mqtt:/mosquitto
+    # ports:
+      #- 1883:1883
+      #- 9001:9001
+    command: mosquitto -c /mosquitto-no-auth.conf
+
+  zigbee2mqtt:
+    container_name: zigbee2mqtt
+    networks:
+      # Add the container to the IOT network
+      - homeassistant
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+    restart: unless-stopped
+    image: ghcr.io/koenkk/zigbee2mqtt:latest
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      # Use the Zigbee2MQTT data directory on /mnt/docker-data/zigbee2mqtt/data on the host to persist the Zigbee2MQTT configuration and data
+      - /mnt/docker-data/zigbee2mqtt/data:/app/data
+    ports:
+      - 8080:8080
+    group_add:
+      - dialout
+    user: 1000:1000
+    devices:
+      # Pass the Zigbee adapter through to the container using the --device flag
+      - /dev/ttyUSB-Zigbee:/dev/ttyUSB-Zigbee
+
+networks:
+  homeassistant:
+    name: homeassistant

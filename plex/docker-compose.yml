@@ -1,8 +1,7 @@
 services:
   plex:
-    image: lscr.io/linuxserver/plex:1.41.8
+    image: lscr.io/linuxserver/plex:1.42.2
     container_name: plex
-    hostname: "e7cc804af290"
     networks:
       default:
         ipv4_address: 192.168.100.2
@@ -11,7 +10,7 @@ services:
       - PGID=1000
       - VERSION=docker
     volumes:
-      - "/etc/plex/library:/config"
+      - "/mnt/docker-data/etc/plex/library:/config"
       - "/mnt/cephfs:/mnt/cephfs:ro"
       - "/mnt/plex/tvseries:/tv"
       - "/mnt/plex/movies:/movies"
