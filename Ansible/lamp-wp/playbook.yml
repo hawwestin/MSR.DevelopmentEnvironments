@@ -1,0 +1,116 @@
+---
+- hosts: web
+  become: yes
+  vars:
+    php_version: "7.4"
+    wp_version: "6.9.4"
+    mysql_root_password: "rootpass"
+    mysql_wp_db: "wordpress"
+    mysql_wp_user: "wpuser"
+    mysql_wp_pass: "wppass"
+    web_root: "/var/www/html"
+
+  tasks:
+
+  - name: Update apt cache
+    apt:
+      update_cache: yes
+
+  # -------------------------
+  # INSTALL APACHE
+  # -------------------------
+  - name: Install Apache
+    apt:
+      name: apache2
+      state: present
+
+  - name: Enable Apache modules
+    apache2_module:
+      name: rewrite
+      state: present
+
+  # -------------------------
+  # INSTALL PHP 7.4.3
+  # -------------------------
+  - name: Install PHP 7.4 + modules
+    apt:
+      name:
+        - php7.4
+        - php7.4-mysql
+        - php7.4-xml
+        - php7.4-gd
+        - php7.4-curl
+        - php7.4-mbstring
+        - php7.4-zip
+      state: present
+
+  - name: Restart Apache after PHP install
+    service:
+      name: apache2
+      state: restarted
+
+  # -------------------------
+  # INSTALL MYSQL 8.0.41
+  # -------------------------
+  - name: Install MySQL server
+    apt:
+      name: mysql-server
+      state: present
+
+  - name: Ensure MySQL is running
+    service:
+      name: mysql
+      state: started
+      enabled: yes
+
+  - name: Set MySQL root password
+    mysql_user:
+      login_user: root
+      login_password: ""
+      user: root
+      password: "{{ mysql_root_password }}"
+      host_all: yes
+    ignore_errors: yes
+
+  - name: Create WordPress database
+    mysql_db:
+      name: "{{ mysql_wp_db }}"
+      state: present
+      login_user: root
+      login_password: "{{ mysql_root_password }}"
+
+  - name: Create WordPress DB user
+    mysql_user:
+      name: "{{ mysql_wp_user }}"
+      password: "{{ mysql_wp_pass }}"
+      priv: "{{ mysql_wp_db }}.*:ALL"
+      state: present
+      login_user: root
+      login_password: "{{ mysql_root_password }}"
+
+  # -------------------------
+  # INSTALL WORDPRESS
+  # -------------------------
+  - name: Remove default Apache index.html
+    file:
+      path: "{{ web_root }}/index.html"
+      state: absent
+
+  - name: Extract WordPress
+    unarchive:
+      src: "files/wordpress-{{ wp_version }}.tar.gz"
+      dest: "{{ web_root }}"
+      remote_src: yes
+      extra_opts: [ "--strip-components=1" ]
+
+  - name: Set permissions
+    file:
+      path: "{{ web_root }}"
+      owner: www-data
+      group: www-data
+      recurse: yes
+
+  - name: Restart Apache
+    service:
+      name: apache2
+      state: restarted
