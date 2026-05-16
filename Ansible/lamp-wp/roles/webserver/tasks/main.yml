@@ -1,0 +1,27 @@
+---
+- name: Install Apache
+  apt:
+    name: apache2
+    state: present
+
+- name: Enable Apache modules
+  apache2_module:
+    name: rewrite
+    state: present
+
+- name: Install PHP 7.4 + modules
+  apt:
+    name:
+      - php7.4
+      - php7.4-mysql
+      - php7.4-xml
+      - php7.4-gd
+      - php7.4-curl
+      - php7.4-mbstring
+      - php7.4-zip
+    state: present
+
+- name: Restart Apache
+  service:
+    name: apache2
+    state: restarted

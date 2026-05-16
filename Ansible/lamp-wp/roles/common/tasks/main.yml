@@ -1,0 +1,17 @@
+---
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+- name: Install base packages
+  apt:
+    name:
+      - curl
+      - unzip
+      - git
+      - software-properties-common
+    state: present
+
+- name: Set timezone
+  timezone:
+    name: Europe/Warsaw
