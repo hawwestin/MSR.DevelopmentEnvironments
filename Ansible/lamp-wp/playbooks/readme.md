@@ -1,3 +1,7 @@
+# config 
+```bash
+export ANSIBLE_CONFIG=$PWD/Ansible/lamp-wp/ansible.cfg
+```
  # Playbooks
 
 ```bash
