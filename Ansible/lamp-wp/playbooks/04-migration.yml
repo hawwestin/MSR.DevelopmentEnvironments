@@ -5,7 +5,7 @@
 
   - name: Sync WordPress files
     synchronize:
-      src: "../files/backup/html/"
+      src: "/mnt/BlogBackups/Restore/html/"
       dest: "/var/www/html/"
       recursive: yes
       delete: no
@@ -25,6 +25,6 @@
     mysql_db:
       name: wordpress
       state: import
-      target: "../files/backup/dump.sql"
+      target: "/mnt/BlogBackups/Restore/dump.sql"
       login_user: root
       login_password: "rootpass"
