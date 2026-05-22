@@ -1,0 +1,1 @@
+ansible all -i 192.168.50.20, -u ansible_mgr --become -m fetch -a "src=/etc/nut/ups.conf dest=./backup/ flat=yes" -K

@@ -1,0 +1,1 @@
+ansible-playbook -i ./Ansible/inventory ./Ansible/fetch_nut_config.yml
