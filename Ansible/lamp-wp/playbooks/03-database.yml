@@ -1,10 +1,7 @@
 ---
 - hosts: db
   become: yes
-  vars:
-    mysql_root_password: "rootpass"
-    mysql_wp_db: "wordpress"
-    mysql_wp_user: "wpuser"
-    mysql_wp_pass: "wppass"
+  vars_files:
+    - ../../vault/secrets.yml
   roles:
     - mysql

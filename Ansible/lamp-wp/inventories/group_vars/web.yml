@@ -1,0 +1,3 @@
+php_version: "7.4"
+wp_version: "6.9.4"
+web_root: "/var/www/html"

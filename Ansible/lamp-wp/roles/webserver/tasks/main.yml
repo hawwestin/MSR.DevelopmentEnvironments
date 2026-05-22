@@ -9,16 +9,16 @@
     name: rewrite
     state: present
 
-- name: Install PHP 7.4 + modules
+- name: Install PHP {{ php_version }} + modules
   apt:
     name:
-      - php7.4
-      - php7.4-mysql
-      - php7.4-xml
-      - php7.4-gd
-      - php7.4-curl
-      - php7.4-mbstring
-      - php7.4-zip
+      - "php{{ php_version }}"
+      - "php{{ php_version }}-mysql"
+      - "php{{ php_version }}-xml"
+      - "php{{ php_version }}-gd"
+      - "php{{ php_version }}-curl"
+      - "php{{ php_version }}-mbstring"
+      - "php{{ php_version }}-zip"
     state: present
 
 - name: Restart Apache

@@ -1,6 +1,9 @@
 ansible/lamp-wp/
  ├── inventories/
- │    └── hosts.ini
+ │    ├── hosts.ini
+ │    ├── hosts_vars/
+ │    └── group_vars/
+ │        └── all.yml
  ├── roles/
  │    ├── common/          # apt update, base packets, timezone, firewall
  │    ├── webserver/       # Apache, PHP 7.4.3, modules
@@ -11,8 +14,10 @@ ansible/lamp-wp/
  │    ├── 02-webserver.yml
  │    ├── 03-database.yml
  │    └── 04-migration.yml
+ ├── vault/
+ │    └── secrets.yml (Encrypted)
  └── files/
-      ├── wordpress-6.9.4.tar.gz
+      └── wordpress-6.9.4.tar.gz
 
 
 
@@ -55,3 +60,5 @@ Things to check
  4. Set correct URL in database
  5. check .htaccess files , backups often miss those 
  6. Plugins and motives need to be in backup if were installed manually. 
+
+

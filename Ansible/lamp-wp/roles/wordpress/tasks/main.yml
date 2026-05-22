@@ -1,19 +1,19 @@
 ---
 - name: Remove default index.html
   file:
-    path: /var/www/html/index.html
+    path: {{ web_root }}/index.html
     state: absent
 
 - name: Extract WordPress
   unarchive:
-    src: wordpress-6.9.4.tar.gz
-    dest: /var/www/html
+    src: wordpress-{{ wp_version }}.tar.gz
+    dest: {{ web_root }}
     remote_src: yes
     extra_opts: [ "--strip-components=1" ]
 
 - name: Set permissions
   file:
-    path: /var/www/html
+    path: {{ web_root }}
     owner: www-data
     group: www-data
     recurse: yes
