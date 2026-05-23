@@ -1,8 +1,10 @@
 ---
 - name: Install Apache
-  apt:
-    name: apache2
-    state: present
+  raw: apt-get install -y apache2
+  become: true
+  # apt:
+  #   name: apache2
+  #   state: present
 
 - name: Enable Apache modules
   apache2_module:
@@ -10,16 +12,19 @@
     state: present
 
 - name: Install PHP {{ php_version }} + modules
-  apt:
-    name:
-      - "php{{ php_version }}"
-      - "php{{ php_version }}-mysql"
-      - "php{{ php_version }}-xml"
-      - "php{{ php_version }}-gd"
-      - "php{{ php_version }}-curl"
-      - "php{{ php_version }}-mbstring"
-      - "php{{ php_version }}-zip"
-    state: present
+  raw: apt-get install -y php{{ php_version }} php{{ php_version }}-mysql php{{ php_version }}-xml php{{ php_version }}-gd php{{ php_version }}-curl php{{ php_version }}-mbstring php{{ php_version }}-zip
+  become: true
+  #
+  # apt:
+  #   name:
+  #     - "php{{ php_version }}"
+  #     - "php{{ php_version }}-mysql"
+  #     - "php{{ php_version }}-xml"
+  #     - "php{{ php_version }}-gd"
+  #     - "php{{ php_version }}-curl"
+  #     - "php{{ php_version }}-mbstring"
+  #     - "php{{ php_version }}-zip"
+  #   state: present
 
 - name: Restart Apache
   service:

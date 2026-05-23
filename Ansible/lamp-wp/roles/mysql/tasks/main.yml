@@ -1,0 +1,51 @@
+---
+- name: Install MySQL server
+  raw: apt-get install -y mysql-server
+  become: true
+  # apt:
+  #   name: mysql-server
+  #   state: present
+
+- name: Ensure MySQL is running
+  service:
+    name: mysql
+    state: started
+    enabled: yes
+
+- name: Set root password
+  raw: mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ mysql_root_password }}';"
+  become: true
+  ignore_errors: yes
+
+# - name: Set root password
+#   mysql_user:
+#     login_user: root
+#     login_password: ""
+#     user: root
+#     password: "{{ mysql_root_password }}"
+#     host_all: yes
+#   ignore_errors: yes
+
+- name: Create WordPress database
+  raw: mysql -u root -p{{ mysql_root_password }} -e "CREATE DATABASE IF NOT EXISTS {{ mysql_wp_db }};"
+  become: true
+
+# - name: Create WordPress database
+#   mysql_db:
+#     name: "{{ mysql_wp_db }}"
+#     state: present
+#     login_user: root
+#     login_password: "{{ mysql_root_password }}"
+
+- name: Create WordPress DB user
+  raw: mysql -u root -p{{ mysql_root_password }} -e "CREATE USER IF NOT EXISTS '{{ mysql_wp_user }}'@'localhost' IDENTIFIED BY '{{ mysql_wp_pass }}'; GRANT ALL PRIVILEGES ON {{ mysql_wp_db }}.* TO '{{ mysql_wp_user }}'@'localhost'; FLUSH PRIVILEGES;"
+  become: true
+
+# - name: Create WordPress DB user
+#   mysql_user:
+#     name: "{{ mysql_wp_user }}"
+#     password: "{{ mysql_wp_pass }}"
+#     priv: "{{ mysql_wp_db }}.*:ALL"
+#     state: present
+#     login_user: root
+#     login_password: "{{ mysql_root_password }}"

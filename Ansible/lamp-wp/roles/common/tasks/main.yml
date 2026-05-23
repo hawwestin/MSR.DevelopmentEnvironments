@@ -1,16 +1,25 @@
 ---
+# APT Does not work on Ubuntu 20.04
+- name: Install python3-apt
+  ansible.builtin.raw: apt-get install -y python3-apt
+  become: true
+
 - name: Update apt cache
-  apt:
-    update_cache: yes
+  ansible.builtin.raw: apt-get update
+  become: true
+  # apt:
+  #   update_cache: yes
 
 - name: Install base packages
-  apt:
-    name:
-      - curl
-      - unzip
-      - git
-      - software-properties-common
-    state: present
+  ansible.builtin.raw: apt-get install -y curl unzip git software-properties-common rsync
+  become: true
+  # apt:
+  #   name:
+  #     - curl
+  #     - unzip
+  #     - git
+  #     - software-properties-common
+  #   state: present
 
 - name: Set timezone
   timezone:
