@@ -2,9 +2,8 @@
 - hosts: db
   become: yes
   vars_files:
-    - ../../vault/secrets.yml
+    - ../vault/secrets.yml
   tasks:
-
   - name: Import SQL dump
     raw: mysql -u root -p{{ mysql_root_password }} {{ mysql_wp_db }} < /mnt/BlogBackups/Restore/dump.sql
     # mysql_db:
