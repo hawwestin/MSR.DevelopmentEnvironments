@@ -5,21 +5,26 @@
 
 # make this more idempotent by checking if the file exists before trying to remove it
 # make this faster by using rsync or synchronize instead of copy
-  - name: Copy WordPress files
-    copy:
-      src: /mnt/BlogBackups/Restore/html_2026_05_01/
-      dest: /var/www/html/
-      owner: www-data
-      group: www-data
-      mode: '0755'
-      remote_src: yes
+  # - name: Copy WordPress files
+  #   copy:
+  #     src: /mnt/BlogBackups/Restore/html_2026_05_01/
+  #     dest: /var/www/html/
+  #     owner: www-data
+  #     group: www-data
+  #     mode: '0755'
+  #     remote_src: yes
+
+  - name: Sync WordPress files
+    synchronize:
+      src: "/mnt/BlogBackups/Restore/html_2026_05_01/"
+      dest: "/var/www/html/"
+      recursive: yes
+      delete: no
+    delegate_to: "{{ inventory_hostname }}"
 
   # - name: Sync WordPress files
-  #   synchronize:
-  #     src: "/mnt/BlogBackups/Restore/html/"
-  #     dest: "/var/www/html/"
-  #     recursive: yes
-  #     delete: no
+  #   ansible.builtin.shell: |
+  #     rsync -avz /mnt/BlogBackups/Restore/html_2026_05_01/ /var/www/html/
 
   - name: Fix permissions
     file:

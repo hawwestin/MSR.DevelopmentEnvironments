@@ -16,7 +16,7 @@ export ANSIBLE_CONFIG=$PWD/Ansible/lamp-wp/ansible.cfg
 ansible-playbook -i Ansible/lamp-wp/inventories/hosts.ini Ansible/lamp-wp/playbooks/01-common.yml 
 ansible-playbook -i Ansible/lamp-wp/inventories/hosts.ini Ansible/lamp-wp/playbooks/02-webserver.yml 
 ansible-playbook -i Ansible/lamp-wp/inventories/hosts.ini Ansible/lamp-wp/playbooks/03-database.yml --ask-vault-pass
-ansible-playbook -i Ansible/lamp-wp/inventories/hosts.ini Ansible/lamp-wp/playbooks/04-migration.yml --ask-vault-pass
+ansible-playbook -i Ansible/lamp-wp/inventories/hosts.ini Ansible/lamp-wp/playbooks/04-migration.yml --ask-vault-pass -vvv
 ```
 
 ## Notes
