@@ -1,10 +1,25 @@
 ---
+- hosts: db
+  become: yes
+  vars_files:
+    - ../../vault/secrets.yml
+  tasks:
+
+  - name: Import SQL dump
+    raw: mysql -u root -p{{ mysql_root_password }} {{ mysql_wp_db }} < /mnt/BlogBackups/Restore/dump.sql
+    # mysql_db:
+    #   name: "{{ mysql_wp_db }}"
+    #   state: import
+    #   target: "/mnt/BlogBackups/Restore/dump.sql"
+    #   login_user: root
+    #   login_password: "{{ mysql_root_password }}"
+
 - hosts: web
   become: yes
   tasks:
 
-# make this more idempotent by checking if the file exists before trying to remove it
-# make this faster by using rsync or synchronize instead of copy
+  # make this more idempotent by checking if the file exists before trying to remove it
+  # make this faster by using rsync or synchronize instead of copy
   # - name: Copy WordPress files
   #   copy:
   #     src: /mnt/BlogBackups/Restore/html_2026_05_01/
@@ -14,17 +29,17 @@
   #     mode: '0755'
   #     remote_src: yes
 
-  - name: Sync WordPress files
-    synchronize:
-      src: "/mnt/BlogBackups/Restore/html_2026_05_01/"
-      dest: "/var/www/html/"
-      recursive: yes
-      delete: no
-    delegate_to: "{{ inventory_hostname }}"
-
   # - name: Sync WordPress files
-  #   ansible.builtin.shell: |
-  #     rsync -avz /mnt/BlogBackups/Restore/html_2026_05_01/ /var/www/html/
+  #   synchronize:
+  #     src: "/mnt/BlogBackups/Restore/html_2026_05_01/"
+  #     dest: "/var/www/html/"
+  #     recursive: yes
+  #     delete: no
+  #   delegate_to: "{{ inventory_hostname }}"
+
+  - name: Sync WordPress files
+    ansible.builtin.shell: |
+      rsync -avz /mnt/BlogBackups/Restore/html_2026_05_01/ /var/www/html/
 
   - name: Fix permissions
     file:
@@ -33,17 +48,4 @@
       group: www-data
       recurse: yes
 
-- hosts: db
-  become: yes
-  vars_files:
-    - ../../vault/secrets.yml
-  tasks:
 
-  - name: Import SQL dump
-    raw: mysql -u root -p{{ mysql_root_password }} wordpress < /mnt/BlogBackups/Restore/dump.sql
-    # mysql_db:
-    #   name: wordpress
-    #   state: import
-    #   target: "/mnt/BlogBackups/Restore/dump.sql"
-    #   login_user: root
-    #   login_password: "rootpass"

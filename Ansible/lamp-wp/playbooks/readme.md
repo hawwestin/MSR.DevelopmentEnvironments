@@ -23,3 +23,10 @@ ansible-playbook -i Ansible/lamp-wp/inventories/hosts.ini Ansible/lamp-wp/playbo
 - All package management uses `raw` module (not `apt` module) to support Python 3.8
 - All MySQL operations use `raw` module (not `mysql_*` modules) to support Python 3.8
 - Playbooks 01-03 are fully tested and working on Ubuntu 20.04 with Python 3.8
+
+## check
+size post migration
+```bash
+du -sh /var/www/html/
+du -sh /mnt/BlogBackups/Restore/html/
+```
