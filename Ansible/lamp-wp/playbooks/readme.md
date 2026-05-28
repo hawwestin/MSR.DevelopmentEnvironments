@@ -27,6 +27,11 @@ ansible-playbook -i Ansible/lamp-wp/inventories/hosts.ini Ansible/lamp-wp/playbo
 ## check
 size post migration
 ```bash
-du -sh /var/www/html/
-du -sh /mnt/BlogBackups/Restore/html/
+sudo du -sh /var/www/html/
+sudo du -sh /mnt/BlogBackups/Restore/
+```
+verify
+```bash
+sudo find /var/www/html -type f | wc -l
+sudo find /mnt/BlogBackups/Restore/ -type f | wc -l
 ```

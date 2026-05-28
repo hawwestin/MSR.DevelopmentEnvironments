@@ -4,14 +4,35 @@
   vars_files:
     - ../vault/secrets.yml
   tasks:
-  - name: Import SQL dump
-    raw: mysql -u root -p{{ mysql_root_password }} {{ mysql_wp_db }} < /mnt/BlogBackups/Restore/dump.sql
-    # mysql_db:
-    #   name: "{{ mysql_wp_db }}"
-    #   state: import
-    #   target: "/mnt/BlogBackups/Restore/dump.sql"
-    #   login_user: root
-    #   login_password: "{{ mysql_root_password }}"
+  - name: Check SQL dump file exists
+    stat:
+      path: /mnt/BlogBackups/Restore/dump.sql
+    register: dump_stat
+
+  - name: Fail when SQL dump is missing
+    fail:
+      msg: "SQL dump not found at /mnt/BlogBackups/Restore/dump.sql on the DB host"
+    when: not dump_stat.stat.exists
+
+  - name: Wait for MySQL to accept connections
+    wait_for:
+      host: 127.0.0.1
+      port: 3306
+      state: started
+      timeout: 300
+
+  - name: Import SQL dump (runs on DB host, async)
+    ansible.builtin.shell: |
+      mysql -u root -p'{{ mysql_root_password }}' {{ mysql_wp_db }} < /mnt/BlogBackups/Restore/dump.sql
+    args:
+      executable: /bin/bash
+    async: 3600
+    poll: 10
+    register: import_job
+
+  - name: Show import stdout/stderr
+    debug:
+      var: import_job
 
 - hosts: web
   become: yes
@@ -37,8 +58,15 @@
   #   delegate_to: "{{ inventory_hostname }}"
 
   - name: Sync WordPress files
-    ansible.builtin.shell: |
-      rsync -avz /mnt/BlogBackups/Restore/html_2026_05_01/ /var/www/html/
+    ansible.builtin.command:
+      cmd: rsync -a --delete /mnt/BlogBackups/Restore/html_2026_05_01/ /var/www/html/
+    async: 3600
+    poll: 10
+
+  - name: Remove default index.html
+    file:
+      path: /var/www/html/index.html
+      state: absent
 
   - name: Fix permissions
     file:
