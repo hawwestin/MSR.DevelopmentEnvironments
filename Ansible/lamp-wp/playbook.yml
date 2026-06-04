@@ -1,3 +1,5 @@
+# Not Used. This playbook is for reference only. The actual playbook used is in the "lamp-wp" role.
+# This playbook is a simplified version of the full setup, intended for testing and development. It installs Apache, PHP 7.4, MySQL 8.0, and WordPress 6.9.4 on a single host. The actual playbook used in production is more complex and includes additional tasks for security hardening, performance optimization, and backup configuration.
 ---
 - hosts: web
   become: yes
@@ -7,7 +9,7 @@
     mysql_root_password: "rootpass"
     mysql_wp_db: "wordpress"
     mysql_wp_user: "wpuser"
-    mysql_wp_pass: "wppass"
+    mysql_wp_password: "wppass"
     web_root: "/var/www/html"
 
   tasks:
@@ -82,7 +84,7 @@
   - name: Create WordPress DB user
     mysql_user:
       name: "{{ mysql_wp_user }}"
-      password: "{{ mysql_wp_pass }}"
+      password: "{{ mysql_wp_password }}"
       priv: "{{ mysql_wp_db }}.*:ALL"
       state: present
       login_user: root
