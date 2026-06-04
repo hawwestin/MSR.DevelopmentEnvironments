@@ -1,13 +1,8 @@
-# ansible config 
-This fix issue with paths to ansible roles.
-By default it looks for them under playbooks directory. 
-```bash
-export ANSIBLE_CONFIG=$PWD/Ansible/lamp-wp/ansible.cfg
-```
-
 # Playbooks
 
 **IMPORTANT:** Always set the ANSIBLE_CONFIG environment variable before running playbooks:
+This fix issue with paths to ansible roles.
+By default it looks for them under playbooks directory. 
 
 ```bash
 export ANSIBLE_CONFIG=$PWD/Ansible/lamp-wp/ansible.cfg
