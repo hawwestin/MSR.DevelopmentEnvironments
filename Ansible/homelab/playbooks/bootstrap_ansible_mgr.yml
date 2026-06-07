@@ -1,0 +1,15 @@
+---
+- name: Bootstrap ansible_mgr account on remote hosts
+  hosts: new
+  remote_user: root
+  gather_facts: no
+  vars:
+    # Set the initial ansible_mgr password when bootstrap is run.
+    ansible_mgr_password_plain: null
+
+    # Optionally deploy an SSH public key for ansible_mgr.
+    # Uncomment and point this to your control-node public key file.
+    ansible_mgr_ssh_pub_key: "{{ lookup('file', '~/.ssh/id_ansible.pub') }}"
+
+  roles:
+    - amuser
