@@ -1,6 +1,0 @@
----
-# Encrypted with: ansible-vault encrypt inventories/group_vars/vm_linux.yml
-# Decrypt with: ansible-vault decrypt inventories/group_vars/vm_linux.yml
-# Set ANSIBLE_VAULT_PASSWORD_FILE or use --vault-password-file to provide password
-
-ansible_become_password: "{{ vault_ansible_mgr_password }}"

@@ -1,0 +1,7 @@
+---
+# Encrypted with: ansible-vault encrypt inventories/group_vars/new/vault.yml
+# Edit  with: ansible-vault edit inventories/group_vars/new/vault.yml
+# Set ANSIBLE_VAULT_PASSWORD_FILE or use --vault-password-file to provide password
+
+ansible_become_password: "{{ vault_ansible_mgr_password }}"
+ansible_ssh_password: "{{ vault_ansible_mgr_password }}"

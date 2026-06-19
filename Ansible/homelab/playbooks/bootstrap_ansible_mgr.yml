@@ -2,7 +2,7 @@
 - name: Bootstrap ansible_mgr account on remote hosts
   hosts: new
   remote_user: root
-  gather_facts: no
+  gather_facts: false
   vars:
     # Set the initial ansible_mgr password when bootstrap is run.
     ansible_mgr_password_plain: null

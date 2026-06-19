@@ -1,0 +1,8 @@
+---
+# Encrypted with: ansible-vault encrypt inventories/group_vars/vm_linux/vault.yml
+# Decrypt with: ansible-vault decrypt inventories/group_vars/vm_linux/vault.yml
+# Set ANSIBLE_VAULT_PASSWORD_FILE or use --vault-password-file to provide password
+
+ansible_become_password: "{{ vault_ansible_mgr_password }}"
+# For other remote hosts that don't have SSH key auth set up yet, you can also set ansible_ssh_password to the same vault variable.
+# ansible_ssh_password: "{{ vault_ansible_mgr_password }}"

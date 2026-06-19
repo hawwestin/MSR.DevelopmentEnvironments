@@ -1,13 +1,20 @@
 # Diagnostic
 
+**IMPORTANT:** Always set the ANSIBLE_CONFIG environment variable before running playbooks:
+This fix issue with paths to ansible roles.
+By default it looks for them under playbooks directory. 
+
 ```bash
-ansible -i Ansible/homelab/inventories/inventory.ini --list-hosts new
+export ANSIBLE_CONFIG=$PWD/Ansible/homelab/ansible.cfg
+export ANSIBLE_VAULT_PASSWORD_FILE=~/.ansible/vault-password
 ```
 
-# ping
 ```bash
-ANSIBLE_CONFIG=Ansible/homelab/ansible.cfg ansible -i Ansible/homelab/inventories/inventory.ini new -m ping -u root -k
-ANSIBLE_CONFIG=Ansible/homelab/ansible.cfg ansible -i Ansible/homelab/inventories/inventory.ini vm_linux -m ping
+ansible --list-hosts new
+
+ansible -a "hostname" new
+
+ansible new -m ping
 ```
 
 # known hosts
@@ -18,5 +25,5 @@ ssh-keyscan -H 192.168.50.100 >> ~/.ssh/known_hosts
 
 # host setup
 ```bash
-ansible -i Ansible/homelab/inventories/inventory.ini new -m setup
+ansible new -m setup
 ```

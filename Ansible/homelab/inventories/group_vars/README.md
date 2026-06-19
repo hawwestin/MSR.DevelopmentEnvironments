@@ -14,16 +14,23 @@ chmod 600 ~/.ansible/vault-password
 
 ### 2. Encrypt the group_vars files
 
+use `--vault-password-file ~/.ansible/vault-password`
+or set env variable
+```bash
+export ANSIBLE_VAULT_PASSWORD_FILE=~/.ansible/vault-password
+```
+
 ```bash
 cd /mnt/c/repos/MSR.DevelopmentEnvironments/Ansible/homelab
 
 # Encrypt both files
-ansible-vault encrypt inventories/group_vars/vm_linux.yml --vault-password-file ~/.ansible/vault-password
-ansible-vault encrypt inventories/group_vars/lxc.yml --vault-password-file ~/.ansible/vault-password
+ansible-vault encrypt Ansible/homelab/inventories/group_vars/new/vault.yml 
+ansible-vault encrypt Ansible/homelab/inventories/group_vars/vm_linux/vault.yml 
+# and so on
 
 # Edit to set the actual password
 ansible-vault edit inventories/group_vars/vm_linux.yml --vault-password-file ~/.ansible/vault-password
-ansible-vault edit inventories/group_vars/lxc.yml --vault-password-file ~/.ansible/vault-password
+ansible-vault edit inventories/group_vars/new.yml --vault-password-file ~/.ansible/vault-password
 ```
 
 ### 3. Use with ansible commands
@@ -47,6 +54,6 @@ export ANSIBLE_VAULT_PASSWORD_FILE=~/.ansible/vault-password
 ## Contents
 
 - **vm_linux.yml** - Contains `ansible_become_password` for vm_linux group hosts
-- **lxc.yml** - Contains `ansible_become_password` for lxc group hosts
+- **new.yml** - Contains `ansible_become_password` for new group hosts
 
 Both files are encrypted and should never be committed to version control.

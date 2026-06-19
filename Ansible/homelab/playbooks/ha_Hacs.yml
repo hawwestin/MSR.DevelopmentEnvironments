@@ -1,7 +1,7 @@
 ---
 - name: Deploy HACS to Home Assistant Docker Bind Mount
   hosts: homeassistant
-  become: yes
+  become: true
   vars:
     # Update this to the absolute path of your bind-mounted HA config directory
     ha_config_dir: "/mnt/docker-data/home-assistant/config"
