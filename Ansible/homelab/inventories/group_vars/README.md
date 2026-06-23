@@ -27,8 +27,8 @@ ansible-vault encrypt Ansible/homelab/inventories/group_vars/vm_linux/vault.yml
 # and so on
 
 # Edit to set the actual password
-ansible-vault edit Ansible/homelab/inventories/group_vars/vm_linux.yml --vault-password-file ~/.ansible/vault-password
-ansible-vault edit Ansible/homelab/inventories/group_vars/new.yml --vault-password-file ~/.ansible/vault-password
+ansible-vault edit Ansible/homelab/inventories/group_vars/vm_linux/vault.yml --vault-password-file ~/.ansible/vault-password
+ansible-vault edit Ansible/homelab/inventories/group_vars/new/vault.yml --vault-password-file ~/.ansible/vault-password
 ```
 
 ### 3. Use with ansible commands
