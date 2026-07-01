@@ -6,7 +6,7 @@ services:
     networks:
       # Add the container to the IOT network
       - homeassistant
-    image: ghcr.io/home-assistant/home-assistant:2026.5
+    image: ghcr.io/home-assistant/home-assistant:2026.6
     depends_on:
       - mqtt
       - zigbee2mqtt
