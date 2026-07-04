@@ -64,6 +64,33 @@ services:
       # Pass the Zigbee adapter through to the container using the --device flag
       - /dev/ttyUSB-Zigbee:/dev/ttyUSB-Zigbee
 
+  matter-server:
+      image: ghcr.io/home-assistant-libs/python-matter-server:stable
+      container_name: matter-server
+      restart: unless-stopped
+      networks:
+      - homeassistant
+      volumes:
+        - /mnt/docker-data/matter:/data
+
+  otbr:
+    image: openthread/otbr:latest
+    container_name: otbr
+    restart: unless-stopped
+    networks:
+      - homeassistant
+    privileged: true # Wymagane do obsługi radia i IPv6
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+      - net.ipv4.conf.all.forwarding=1
+      - net.ipv6.conf.all.forwarding=1
+    devices:
+      - /dev/ttyUSB-Thread:/dev/ttyUSB-Thread
+    command: >
+      --radio-url spinel+hdlc+uart:///dev/ttyUSB-Thread?baudrate=460800 #115200
+    ports:
+      - 8081:80
+
 networks:
   homeassistant:
     name: homeassistant
