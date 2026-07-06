@@ -82,24 +82,28 @@ services:
     container_name: otbr
     restart: unless-stopped
     environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
+      - NAT64=0 # Disable start scritps that requires iptables annd modify routing tables. This is required for running in a unprivileged container.
+      - NAT44=0
+      - DNS64=0
+      - FIREWALL=0
     networks:
       - homeassistant
-    # privileged: true # Required for radio and IPv6
-    sysctls:
-      - net.ipv6.conf.all.disable_ipv6=0
-      - net.ipv4.conf.all.forwarding=1
-      - net.ipv6.conf.all.forwarding=1
+    privileged: true # Required for radio and IPv6
+    # sysctls:
+    #   - net.ipv6.conf.all.disable_ipv6=0
+    #   - net.ipv4.conf.all.forwarding=1
+    #   - net.ipv6.conf.all.forwarding=1
     devices:
       - /dev/ttyUSB-Thread:/dev/ttyUSB-Thread
+      - /dev/net/tun:/dev/net/tun # <-- Add module of virtual interfaces
+    cap_add:
+      - NET_ADMIN # <-- Change: Permission to create wpan0 interface
     command: >
       --radio-url spinel+hdlc+uart:///dev/ttyUSB-Thread?baudrate=460800 
     ports:
       - 8081:80
     group_add:
       - 20 # dialout group
-    user: 1000:1000
     volumes:
       - /mnt/docker-data/otbr:/data
 
