@@ -65,21 +65,28 @@ services:
       - /dev/ttyUSB-Zigbee:/dev/ttyUSB-Zigbee
 
   matter-server:
-      image: ghcr.io/home-assistant-libs/python-matter-server:stable
-      container_name: matter-server
-      restart: unless-stopped
-      networks:
+    image: ghcr.io/home-assistant-libs/python-matter-server:stable
+    container_name: matter-server
+    restart: unless-stopped
+    user: 1000:1000
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+    networks:
       - homeassistant
-      volumes:
-        - /mnt/docker-data/matter:/data
+    volumes:
+      - /mnt/docker-data/matter:/data
 
   otbr:
     image: openthread/otbr:latest
     container_name: otbr
     restart: unless-stopped
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
     networks:
       - homeassistant
-    privileged: true # Wymagane do obsługi radia i IPv6
+    # privileged: true # Required for radio and IPv6
     sysctls:
       - net.ipv6.conf.all.disable_ipv6=0
       - net.ipv4.conf.all.forwarding=1
@@ -87,9 +94,14 @@ services:
     devices:
       - /dev/ttyUSB-Thread:/dev/ttyUSB-Thread
     command: >
-      --radio-url spinel+hdlc+uart:///dev/ttyUSB-Thread?baudrate=460800 #115200
+      --radio-url spinel+hdlc+uart:///dev/ttyUSB-Thread?baudrate=460800 
     ports:
       - 8081:80
+    group_add:
+      - 20 # dialout group
+    user: 1000:1000
+    volumes:
+      - /mnt/docker-data/otbr:/data
 
 networks:
   homeassistant:
