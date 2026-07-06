@@ -78,17 +78,21 @@ services:
       - /mnt/docker-data/matter:/data
 
   otbr:
-    image: openthread/otbr:latest
+    image: openthread/border-router:latest
     container_name: otbr
     restart: unless-stopped
+    networks:
+      - homeassistant
     environment:
-      - NAT64=0 # Disable start scritps that requires iptables annd modify routing tables. This is required for running in a unprivileged container.
+      # Disable start scritps that requires iptables annd modify routing tables. This is required for running in a unprivileged container.
+      - NAT64=0 
       - NAT44=0
       - DNS64=0
       - FIREWALL=0
-    networks:
-      - homeassistant
-    privileged: true # Required for radio and IPv6
+      - OT_RCP_DEVICE=spinel+hdlc+uart:///dev/ttyUSB-Thread?uart-baudrate=460800
+      - OT_INFRA_IF=eth0
+      - OT_THREAD_IF=wpan0
+    # privileged: true # Required for radio and IPv6
     # sysctls:
     #   - net.ipv6.conf.all.disable_ipv6=0
     #   - net.ipv4.conf.all.forwarding=1
@@ -98,8 +102,6 @@ services:
       - /dev/net/tun:/dev/net/tun # <-- Add module of virtual interfaces
     cap_add:
       - NET_ADMIN # <-- Change: Permission to create wpan0 interface
-    command: >
-      --radio-url spinel+hdlc+uart:///dev/ttyUSB-Thread?baudrate=460800 
     ports:
       - 8081:80
     group_add:
