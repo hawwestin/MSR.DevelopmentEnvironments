@@ -92,6 +92,9 @@ services:
       - OT_RCP_DEVICE=spinel+hdlc+uart:///dev/ttyUSB-Thread?uart-baudrate=460800
       - OT_INFRA_IF=eth0
       - OT_THREAD_IF=wpan0
+      # --- Change: Expose services outside 127.0.0.1 ---
+      - OT_REST_LISTEN_ADDR=0.0.0.0
+      - OT_WEB_LISTEN_ADDR=0.0.0.0
     # privileged: true # Required for radio and IPv6
     # sysctls:
     #   - net.ipv6.conf.all.disable_ipv6=0
@@ -103,7 +106,8 @@ services:
     cap_add:
       - NET_ADMIN # <-- Change: Permission to create wpan0 interface
     ports:
-      - 8081:80
+      - "8080:80"     # Web GUI 
+      - "8081:8081"   # REST API 
     group_add:
       - 20 # dialout group
     volumes:
