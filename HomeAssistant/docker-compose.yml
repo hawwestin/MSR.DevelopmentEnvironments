@@ -68,12 +68,10 @@ services:
     image: ghcr.io/home-assistant-libs/python-matter-server:stable
     container_name: matter-server
     restart: unless-stopped
-    user: 1000:1000
-    environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
     networks:
-      - homeassistant
+      homeassistant: {}
+      vlan100: 
+        ipv4_address: 192.168.100.17 # TODO migrate to Wifi IOT network
     volumes:
       - /mnt/docker-data/matter:/data
 
@@ -82,24 +80,24 @@ services:
     container_name: otbr
     restart: unless-stopped
     networks:
-      - homeassistant
+      homeassistant: {}
+      vlan100: 
+        ipv4_address: 192.168.100.16 #TODO migrate to Wifi IOT network
     environment:
       # Disable start scritps that requires iptables annd modify routing tables. This is required for running in a unprivileged container.
       - NAT64=0 
       - NAT44=0
       - DNS64=0
       - FIREWALL=0
+      # configure the OTBR to use the serial interface of the host for the Thread radio
       - OT_RCP_DEVICE=spinel+hdlc+uart:///dev/ttyUSB-Thread?uart-baudrate=460800
       - OT_INFRA_IF=eth0
       - OT_THREAD_IF=wpan0
-      # --- Change: Expose services outside 127.0.0.1 ---
+      - WEB_GUI=1
+      - REST_API=1
+      # --- Expose services outside 127.0.0.1 ---
       - OT_REST_LISTEN_ADDR=0.0.0.0
       - OT_WEB_LISTEN_ADDR=0.0.0.0
-    # privileged: true # Required for radio and IPv6
-    # sysctls:
-    #   - net.ipv6.conf.all.disable_ipv6=0
-    #   - net.ipv4.conf.all.forwarding=1
-    #   - net.ipv6.conf.all.forwarding=1
     devices:
       - /dev/ttyUSB-Thread:/dev/ttyUSB-Thread
       - /dev/net/tun:/dev/net/tun # <-- Add module of virtual interfaces
@@ -116,3 +114,6 @@ services:
 networks:
   homeassistant:
     name: homeassistant
+  vlan100: 
+    external: true
+    name: docker-static-vlan100
