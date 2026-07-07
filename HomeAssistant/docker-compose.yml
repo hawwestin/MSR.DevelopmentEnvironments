@@ -4,8 +4,9 @@ services:
   homeassistant:
     container_name: homeassistant
     networks:
-      # Add the container to the IOT network
-      - homeassistant
+      homeassistant: {}
+      vlan100: 
+        ipv4_address: 192.168.100.18 #TODO migrate to Wifi IOT network
     image: ghcr.io/home-assistant/home-assistant:2026.6
     depends_on:
       - mqtt
