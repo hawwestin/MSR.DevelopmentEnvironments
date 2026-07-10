@@ -6,7 +6,10 @@ services:
     networks:
       homeassistant: {}
       vlan100: 
-        ipv4_address: 192.168.100.18 #TODO migrate to Wifi IOT network
+        ipv4_address: 192.168.100.18
+      wifi: 
+        ipv4_address: 192.168.11.11
+        ipv6_address: fd00:11::11
     image: ghcr.io/home-assistant/home-assistant:2026.6
     depends_on:
       - mqtt
@@ -72,7 +75,10 @@ services:
     networks:
       homeassistant: {}
       vlan100: 
-        ipv4_address: 192.168.100.17 # TODO migrate to Wifi IOT network
+        ipv4_address: 192.168.100.17
+      wifi: 
+        ipv4_address: 192.168.11.12
+        ipv6_address: fd00:11::12
     volumes:
       - /mnt/docker-data/matter:/data
 
@@ -83,7 +89,10 @@ services:
     networks:
       homeassistant: {}
       vlan100: 
-        ipv4_address: 192.168.100.16 #TODO migrate to Wifi IOT network
+        ipv4_address: 192.168.100.16
+      wifi: 
+        ipv4_address: 192.168.11.13
+        ipv6_address: fd00:11::13
     environment:
       # Disable start scritps that requires iptables annd modify routing tables. This is required for running in a unprivileged container.
       - NAT64=0 
@@ -118,3 +127,6 @@ networks:
   vlan100: 
     external: true
     name: docker-static-vlan100
+  wifi: 
+    external: true
+    name: docker-static-wifi
