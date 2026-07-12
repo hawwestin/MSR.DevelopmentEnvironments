@@ -72,6 +72,10 @@ services:
     image: ghcr.io/home-assistant-libs/python-matter-server:stable
     container_name: matter-server
     restart: unless-stopped
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+      - net.ipv6.conf.all.accept_ra=2
+      - net.ipv6.conf.default.accept_ra=2
     networks:
       homeassistant: {}
       vlan100: 
@@ -86,6 +90,10 @@ services:
     image: openthread/border-router:latest
     container_name: otbr
     restart: unless-stopped
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+      - net.ipv4.conf.all.forwarding=1
+      - net.ipv6.conf.all.forwarding=1
     networks:
       homeassistant: {}
       vlan100: 
@@ -101,8 +109,9 @@ services:
       - FIREWALL=0
       # configure the OTBR to use the serial interface of the host for the Thread radio
       - OT_RCP_DEVICE=spinel+hdlc+uart:///dev/ttyUSB-Thread?uart-baudrate=460800
-      - OT_INFRA_IF=eth0
+      - OT_INFRA_IF=eth1
       - OT_THREAD_IF=wpan0
+      - OT_LOG_LEVEL=7
       - WEB_GUI=1
       - REST_API=1
       # --- Expose services outside 127.0.0.1 ---

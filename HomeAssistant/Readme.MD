@@ -19,7 +19,8 @@
     - [Open Source MQTT Mosquitto](https://www.mosquitto.org/)
     - [Docker image](https://hub.docker.com/_/eclipse-mosquitto)
     - [mosquitto.conf man page](https://www.mosquitto.org/man/mosquitto-conf-5.html)
-
+- Open Thrad Border router
+    - Official docker documentation and config/env variables https://openthread.io/guides/border-router/build-docker 
 
 
 # LXC approach     
