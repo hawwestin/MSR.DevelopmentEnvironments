@@ -22,3 +22,9 @@ ansible-playbook  playbooks/bootstrap_ansible_mgr.yml \
 
 ansible-playbook Ansible/homelab/playbooks/bootstrap_ansible_mgr.yml
 ```
+
+
+Other plays
+```bash
+ansible-playbook Ansible/homelab/playbooks/ha_otbr.yml --syntax-check
+```

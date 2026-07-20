@@ -82,7 +82,6 @@ services:
       - net.ipv6.conf.all.accept_ra_rt_info_max_plen=64
       - net.ipv6.conf.default.accept_ra_rt_info_max_plen=64
     networks:
-      homeassistant: {}
       iot: 
         ipv4_address: 192.168.12.12
         ipv6_address: fd00:12::12
@@ -97,10 +96,9 @@ services:
       - net.ipv6.conf.all.disable_ipv6=0
       - net.ipv4.conf.all.forwarding=1
       - net.ipv6.conf.all.forwarding=1
+      - net.ipv6.conf.all.accept_ra_rt_info_max_plen=64
+      - net.ipv6.conf.all.accept_ra=2
     networks:
-      homeassistant: {}
-      vlan100: 
-        ipv4_address: 192.168.100.16
       iot: 
         ipv4_address: 192.168.12.13
         ipv6_address: fd00:12::13

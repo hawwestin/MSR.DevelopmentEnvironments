@@ -1,0 +1,48 @@
+---
+# based on https://raw.githubusercontent.com/openthread/ot-br-posix/refs/heads/main/etc/docker/border-router/setup-host
+- name: Reconfigure IPv6 on Home Assistant host
+  hosts: homeassistant
+  become: true
+  vars:
+    # Update this if your docker compose service or container has a different name
+    otbr_container_name: "otbr"    
+    infra_if_name: "iot"
+
+  tasks:
+    - name: Ensure OTBR IPv6 RA sysctl config exists
+      ansible.builtin.copy:
+        dest: /etc/sysctl.d/60-otbr-accept-ra.conf
+        content: |
+          net.ipv6.conf.{{ infra_if_name }}.accept_ra = 2
+          net.ipv6.conf.{{ infra_if_name }}.accept_ra_rt_info_max_plen = 64
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Ensure IP forwarding sysctl config exists
+      ansible.builtin.copy:
+        dest: /etc/sysctl.d/60-otbr-ip-forward.conf
+        content: |
+          net.ipv6.conf.all.forwarding = 1
+          net.ipv4.ip_forward = 1
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Apply IPv6 and IPv4 sysctl settings
+      ansible.builtin.sysctl:
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
+        state: present
+        reload: no
+      loop:
+        - { name: "net.ipv6.conf.{{ infra_if_name }}.accept_ra", value: 2 }
+        - { name: "net.ipv6.conf.{{ infra_if_name }}.accept_ra_rt_info_max_plen", value: 64 }
+        - { name: "net.ipv6.conf.all.forwarding", value: 1 }
+        - { name: "net.ipv4.ip_forward", value: 1 }
+
+    - name: Restart OTBR container
+      community.docker.docker_container:
+        name: "{{ otbr_container_name }}"
+        state: started
+        restart: yes
