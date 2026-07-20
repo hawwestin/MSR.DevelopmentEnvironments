@@ -1,0 +1,184 @@
+---
+- name: Relocate Docker and containerd to /mnt/docker-data
+  hosts: docker_hosts
+  become: true
+  gather_facts: true
+
+  vars:
+    docker_data_root: /mnt/docker-data/docker
+    containerd_data_root: /mnt/docker-data/containerd
+
+    # Set to true after you confirm everything works (docker ps, etc.)
+    remove_old_backups: false
+
+  handlers:
+    - name: Restart docker
+      ansible.builtin.service:
+        name: docker
+        state: restarted
+
+  tasks:
+    - name: Verify new mount exists
+      ansible.builtin.stat:
+        path: /mnt/docker-data
+      register: dockerdata_mount
+
+    - name: Fail if /mnt/docker-data does not exist
+      ansible.builtin.fail:
+        msg: "/mnt/docker-data does not exist. Mount the disk/volume first (e.g. via fstab/LXC mount) and rerun."
+      when: not dockerdata_mount.stat.exists
+
+    - name: Ensure docker data-root directory exists
+      ansible.builtin.file:
+        path: "{{ docker_data_root }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Ensure containerd data directory exists
+      ansible.builtin.file:
+        path: "{{ containerd_data_root }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    # --- Stop services ---
+    - name: Stop docker
+      ansible.builtin.service:
+        name: docker
+        state: stopped
+      failed_when: false
+
+    - name: Stop containerd
+      ansible.builtin.service:
+        name: containerd
+        state: stopped
+      failed_when: false
+
+    # --- Migrate Docker root (entire /var/lib/docker) ---
+    - name: Stat /var/lib/docker
+      ansible.builtin.stat:
+        path: /var/lib/docker
+        follow: false
+      register: varlib_docker
+
+    - name: Rsync entire Docker root to new location (Option B)
+      ansible.builtin.command:
+        cmd: "rsync -aP /var/lib/docker/ {{ docker_data_root }}/"
+      when:
+        - varlib_docker.stat.exists
+        - varlib_docker.stat.isdir
+      changed_when: true
+
+    - name: Move old /var/lib/docker aside as backup
+      ansible.builtin.command:
+        cmd: mv /var/lib/docker /var/lib/docker_old
+      args:
+        creates: /var/lib/docker_old
+      when:
+        - varlib_docker.stat.exists
+        - varlib_docker.stat.isdir
+      changed_when: true
+
+    - name: Create symlink /var/lib/docker -> new docker root
+      ansible.builtin.file:
+        src: "{{ docker_data_root }}"
+        dest: /var/lib/docker
+        state: link
+        force: true
+
+    - name: Configure Docker daemon.json to use new data-root
+      ansible.builtin.copy:
+        dest: /etc/docker/daemon.json
+        owner: root
+        group: root
+        mode: '0644'
+        content: |
+          {
+            "data-root": "{{ docker_data_root }}"
+          }
+      notify: Restart docker
+
+    # --- Migrate containerd (/var/lib/containerd -> /mnt/docker-data/containerd) ---
+    - name: Stat /var/lib/containerd
+      ansible.builtin.stat:
+        path: /var/lib/containerd
+        follow: false
+      register: varlib_containerd
+
+    - name: Copy existing containerd data to new location (safe copy)
+      ansible.builtin.command:
+        cmd: "cp -ax /var/lib/containerd/. {{ containerd_data_root }}/"
+      when:
+        - varlib_containerd.stat.exists
+        - varlib_containerd.stat.islnk is defined
+        - not varlib_containerd.stat.islnk
+      changed_when: true
+
+    - name: Move old /var/lib/containerd aside as backup
+      ansible.builtin.command:
+        cmd: mv /var/lib/containerd /var/lib/containerd_old
+      args:
+        creates: /var/lib/containerd_old
+      when:
+        - varlib_containerd.stat.exists
+        - varlib_containerd.stat.islnk is defined
+        - not varlib_containerd.stat.islnk
+      changed_when: true
+
+    - name: Create symlink /var/lib/containerd -> new containerd root
+      ansible.builtin.file:
+        src: "{{ containerd_data_root }}"
+        dest: /var/lib/containerd
+        state: link
+        force: true
+
+    # --- Start services ---
+    - name: Start containerd
+      ansible.builtin.service:
+        name: containerd
+        state: started
+      failed_when: false
+
+    - name: Flush handlers (restart docker if daemon.json changed)
+      ansible.builtin.meta: flush_handlers
+
+    - name: Start docker
+      ansible.builtin.service:
+        name: docker
+        state: started
+      failed_when: false
+
+    # --- Verification ---
+    - name: Get docker info
+      ansible.builtin.command:
+        cmd: docker info
+      register: docker_info
+      changed_when: false
+      failed_when: false
+
+    - name: Assert Docker Root Dir is correct
+      ansible.builtin.assert:
+        that:
+          - "docker_info.rc == 0"
+          - "('Docker Root Dir: ' ~ docker_data_root) in docker_info.stdout"
+        fail_msg: "Docker Root Dir does not match expected data-root. Check /etc/docker/daemon.json and service status."
+
+    - name: Show docker root dir line (debug)
+      ansible.builtin.debug:
+        msg: "{{ (docker_info.stdout_lines | select('search', 'Docker Root Dir:') | list | first) | default('Docker Root Dir line not found') }}"
+
+    # --- Optional cleanup ---
+    - name: Remove old docker backup (optional)
+      ansible.builtin.file:
+        path: /var/lib/docker_old
+        state: absent
+      when: remove_old_backups | bool
+
+    - name: Remove old containerd backup (optional)
+      ansible.builtin.file:
+        path: /var/lib/containerd_old
+        state: absent
+      when: remove_old_backups | bool

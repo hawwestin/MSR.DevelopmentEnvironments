@@ -27,4 +27,5 @@ ansible-playbook Ansible/homelab/playbooks/bootstrap_ansible_mgr.yml
 Other plays
 ```bash
 ansible-playbook Ansible/homelab/playbooks/ha_otbr.yml --syntax-check
+ansible-playbook Ansible/homelab/playbooks/docker_install.yml --syntax-check
 ```
