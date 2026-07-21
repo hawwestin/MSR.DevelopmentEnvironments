@@ -1,11 +1,11 @@
 ---
 # based on https://raw.githubusercontent.com/openthread/ot-br-posix/refs/heads/main/etc/docker/border-router/setup-host
 - name: Reconfigure IPv6 on Home Assistant host
-  hosts: homeassistant
+  hosts: OTBR
   become: true
   vars:
     # Update this if your docker compose service or container has a different name
-    otbr_container_name: "otbr"    
+    otbr_container_name: "otbr"
     infra_if_name: "iot"
 
   tasks:
