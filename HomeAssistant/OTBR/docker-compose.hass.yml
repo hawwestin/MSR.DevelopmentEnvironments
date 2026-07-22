@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  # --- ROUTER BRZEGOWY THREAD (OTBR) ---
+  otbr:
+    image: ghcr.io/ownbee/hass-otbr-docker:latest
+    container_name: otbr
+    restart: unless-stopped
+    privileged: true                  # Wymagane w Dockerze do obsługi wpan0 (LXC i tak to ograniczy do bezpiecznych ram)
+    network_mode: host                # Kluczowe dla mDNS i IPv6
+    environment:
+      - DEVICE=spinel+hdlc+uart:///dev/ttyUSB-Thread?uart-baudrate=460800
+      - BACKBONE_IF=eth0              # Upewnij się, że taka jest nazwa interfejsu wewnątrz LXC
+      - OTBR_REST_PORT=8081
+      - OTBR_WEB_PORT=8080
+      - OTBR_WEB=1
+    devices:
+      - /dev/ttyUSB-Thread:/dev/ttyUSB-Thread
+      - /dev/net/tun:/dev/net/tun
+    volumes:
+      - /mnt/docker-data/otbr:/var/lib/thread
+
+  # --- SERWER MATTER ---
+  matter-server:
+    image: ghcr.io/home-assistant-libs/python-matter-server:stable
+    container_name: matter-server
+    restart: unless-stopped
+    network_mode: host                # Wymagane dla poprawnego rozgłaszania urządzeń w sieci
+    volumes:
+      - /mnt/docker-data/matter:/data
