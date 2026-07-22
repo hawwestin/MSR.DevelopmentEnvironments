@@ -1,0 +1,45 @@
+---
+- name: Ensure ansible_mgr password hash is available
+  ansible.builtin.set_fact:
+    ansible_mgr_password_hash: "{{ ansible_mgr_password_plain | password_hash('sha512') }}"
+  when: ansible_mgr_password_plain is not none
+
+- name: Ensure {{ ansible_mgr_user }} user exists
+  ansible.builtin.user:
+    name: "{{ ansible_mgr_user }}"
+    shell: "{{ ansible_mgr_shell }}"
+    groups: "{{ ansible_mgr_groups }}"
+    append: yes
+    create_home: yes
+    password: "{{ ansible_mgr_password_hash | default(omit) }}"
+
+- name: Ensure /etc/sudoers.d exists
+  ansible.builtin.file:
+    path: /etc/sudoers.d
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+- name: Ensure sudoers file exists for {{ ansible_mgr_user }}
+  ansible.builtin.copy:
+    dest: "/etc/sudoers.d/{{ ansible_mgr_user }}"
+    content: "{{ ansible_mgr_user }} ALL=(ALL) NOPASSWD:ALL\n"
+    mode: '0440'
+    owner: root
+    group: root
+
+- name: Ensure home .ssh directory exists for {{ ansible_mgr_user }}
+  ansible.builtin.file:
+    path: "/home/{{ ansible_mgr_user }}/.ssh"
+    state: directory
+    owner: "{{ ansible_mgr_user }}"
+    group: "{{ ansible_mgr_user }}"
+    mode: '0700'
+
+- name: Install authorized_key for {{ ansible_mgr_user }}
+  ansible.builtin.authorized_key:
+    user: "{{ ansible_mgr_user }}"
+    key: "{{ ansible_mgr_ssh_pub_key }}"
+    state: present
+  when: ansible_mgr_ssh_pub_key is not none

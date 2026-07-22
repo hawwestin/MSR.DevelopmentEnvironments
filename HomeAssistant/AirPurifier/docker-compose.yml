@@ -1,0 +1,19 @@
+---
+name: AirPurifier
+services:
+  philips_ac4220_mqtt:
+    image: ghcr.io/rgerganov/airctrl:latest
+    container_name: philips_ac4220_mqtt
+    restart: unless-stopped
+    command: >
+      bash -c "
+      while true; do
+        airctrl --host 192.168.10.50 --protocol coap --json |
+        jq -c '. | {pm25: .pm25, pm10: .pm10, voc: .tvoc, filter: .filter_life, mode: .mode, power: .pwr}' |
+        mosquitto_pub -h mqtt-broker -u mqttuser -P mqttpass -t philips/ac4220/state -l;
+        sleep 10;
+      done"
+    depends_on:
+      - mqtt
+    networks:
+      - ha_net

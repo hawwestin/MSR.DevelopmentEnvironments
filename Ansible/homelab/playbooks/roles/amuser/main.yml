@@ -1,0 +1,3 @@
+---
+# This role is implemented in tasks/main.yml.
+# Run it from a playbook using `roles: - amuser`.

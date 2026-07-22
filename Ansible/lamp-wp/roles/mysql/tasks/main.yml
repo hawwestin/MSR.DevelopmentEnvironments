@@ -1,0 +1,102 @@
+---
+- name: Install MySQL server
+  raw: apt-get install -y mysql-server
+  become: true
+  # apt:
+  #   name: mysql-server
+  #   state: present
+
+- name: Ensure MySQL is running
+  service:
+    name: mysql
+    state: started
+    enabled: yes
+
+- name: Check if root can connect without password
+  shell: mysql -uroot -e "SELECT 1;" >/dev/null 2>&1
+  register: root_nopass
+  ignore_errors: true
+  changed_when: false
+
+- name: Try setting root password via socket if needed
+  shell: mysql -uroot -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ mysql_root_password }}';"
+  when: root_nopass.rc == 0
+  become: true
+
+- name: Check if root can connect with password
+  shell: mysql -uroot -p'{{ mysql_root_password }}' -e "SELECT 1;" >/dev/null 2>&1
+  register: root_withpass
+  ignore_errors: true
+  changed_when: false
+
+- name: Fail if root is inaccessible
+  fail:
+    msg: "MySQL root is not accessible via socket nor the provided password ({{ mysql_root_password }}). Fix MySQL auth first."
+  when: root_nopass.rc != 0 and root_withpass.rc != 0
+
+- name: Create WordPress database using root
+  shell: |
+    if [ {{ root_withpass.rc }} -eq 0 ]; then
+      mysql -uroot -p'{{ mysql_root_password }}' -e "CREATE DATABASE IF NOT EXISTS \`{{ mysql_wp_db }}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+    else
+      mysql -uroot -e "CREATE DATABASE IF NOT EXISTS \`{{ mysql_wp_db }}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+    fi
+  become: true
+
+- name: Ensure WordPress DB user exists and has privileges
+  shell: |
+    if [ {{ root_withpass.rc }} -eq 0 ]; then
+      mysql -uroot -p'{{ mysql_root_password }}' -e "CREATE USER IF NOT EXISTS '{{ mysql_wp_user }}'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ mysql_wp_password }}'; CREATE USER IF NOT EXISTS '{{ mysql_wp_user }}'@'%' IDENTIFIED WITH mysql_native_password BY '{{ mysql_wp_password }}'; ALTER USER '{{ mysql_wp_user }}'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ mysql_wp_password }}'; ALTER USER '{{ mysql_wp_user }}'@'%' IDENTIFIED WITH mysql_native_password BY '{{ mysql_wp_password }}'; GRANT ALL PRIVILEGES ON \`{{ mysql_wp_db }}\`.* TO '{{ mysql_wp_user }}'@'localhost'; GRANT ALL PRIVILEGES ON \`{{ mysql_wp_db }}\`.* TO '{{ mysql_wp_user }}'@'%'; FLUSH PRIVILEGES;"
+    else
+      mysql -uroot -e "CREATE USER IF NOT EXISTS '{{ mysql_wp_user }}'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ mysql_wp_password }}'; CREATE USER IF NOT EXISTS '{{ mysql_wp_user }}'@'%' IDENTIFIED WITH mysql_native_password BY '{{ mysql_wp_password }}'; ALTER USER '{{ mysql_wp_user }}'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ mysql_wp_password }}'; ALTER USER '{{ mysql_wp_user }}'@'%' IDENTIFIED WITH mysql_native_password BY '{{ mysql_wp_password }}'; GRANT ALL PRIVILEGES ON \`{{ mysql_wp_db }}\`.* TO '{{ mysql_wp_user }}'@'localhost'; GRANT ALL PRIVILEGES ON \`{{ mysql_wp_db }}\`.* TO '{{ mysql_wp_user }}'@'%'; FLUSH PRIVILEGES;"
+    fi
+  become: true
+
+- name: Install python3-pymysql
+  raw: apt-get install -y python3-pymysql
+  become: true
+  # Old ubuntu fails on apt
+  # apt:
+  #   name: python3-pymysql
+  #   state: present
+
+- name: Update WP DB user to use mysql_native_password plugin
+  community.mysql.mysql_user:
+    name: "{{ mysql_wp_user }}"
+    password: "{{ mysql_wp_password }}"
+    host: "{{ item }}"
+    priv: "{{ mysql_wp_db }}.*:ALL"
+    plugin: "mysql_native_password"
+    state: present
+    login_user: "root"
+    login_password: "{{ mysql_root_password }}"
+  loop:
+    - "localhost"
+    - "%"
+
+- name: Debug WP user plugin after creation
+  shell: |
+    if [ {{ root_withpass.rc }} -eq 0 ]; then
+      mysql -uroot -p'{{ mysql_root_password }}' -e "SELECT user, host, plugin FROM mysql.user WHERE user='{{ mysql_wp_user }}';"
+    else
+      mysql -uroot -e "SELECT user, host, plugin FROM mysql.user WHERE user='{{ mysql_wp_user }}';"
+    fi
+  register: wp_user_plugin
+  changed_when: false
+
+- name: Debug WP user grants after creation
+  shell: |
+    if [ {{ root_withpass.rc }} -eq 0 ]; then
+      mysql -uroot -p'{{ mysql_root_password }}' -e "SHOW GRANTS FOR '{{ mysql_wp_user }}'@'localhost'; SHOW GRANTS FOR '{{ mysql_wp_user }}'@'%';"
+    else
+      mysql -uroot -e "SHOW GRANTS FOR '{{ mysql_wp_user }}'@'localhost'; SHOW GRANTS FOR '{{ mysql_wp_user }}'@'%';"
+    fi
+  register: wp_user_grants
+  changed_when: false
+
+- name: Test DB connection using WP config values
+  shell: |
+    mysql -u'{{ mysql_wp_user }}' -p'{{ mysql_wp_password }}' -h localhost -e "USE {{ mysql_wp_db }}; SHOW TABLES;"
+  register: wp_user_conn
+  failed_when: wp_user_conn.rc != 0
+  changed_when: false

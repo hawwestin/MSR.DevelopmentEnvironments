@@ -1,0 +1,35 @@
+---
+- name: Deploy HACS to Home Assistant Docker Bind Mount
+  hosts: homeassistant
+  become: true
+  vars:
+    # Update this to the absolute path of your bind-mounted HA config directory
+    ha_config_dir: "/mnt/docker-data/home-assistant/config"
+    # Update this if your docker compose service or container has a different name
+    ha_container_name: "homeassistant"
+    # User and group ID that owns the Home Assistant files (often root or a specific UID like 1000)
+    ha_file_owner: "homeassist"
+    ha_file_group: "homeassist"
+
+  tasks:
+    - name: Ensure custom_components directory exists
+      ansible.builtin.file:
+        path: "{{ ha_config_dir }}/custom_components/hacs"
+        state: directory
+        owner: "{{ ha_file_owner }}"
+        group: "{{ ha_file_group }}"
+        mode: '0755'
+
+    - name: Download and extract latest HACS release
+      ansible.builtin.unarchive:
+        src: "https://github.com/hacs/integration/releases/latest/download/hacs.zip"
+        dest: "{{ ha_config_dir }}/custom_components/hacs"
+        remote_src: yes
+        owner: "{{ ha_file_owner }}"
+        group: "{{ ha_file_group }}"
+      
+    - name: Restart Home Assistant container
+      community.docker.docker_container:
+        name: "{{ ha_container_name }}"
+        state: started
+        restart: yes

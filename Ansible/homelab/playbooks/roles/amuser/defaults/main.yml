@@ -1,0 +1,6 @@
+---
+ansible_mgr_user: ansible_mgr
+ansible_mgr_shell: /bin/bash
+ansible_mgr_groups: sudo
+ansible_mgr_password_plain: null
+ansible_mgr_ssh_pub_key: null

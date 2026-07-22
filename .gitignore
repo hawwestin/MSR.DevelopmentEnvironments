@@ -138,3 +138,9 @@ dmypy.json
 
 # sublime
 .sublime
+
+# tars
+*.tar.gz
+
+# vscode
+.vscode/

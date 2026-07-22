@@ -3,10 +3,18 @@ name: homeassistant
 services:
   homeassistant:
     container_name: homeassistant
+    image: ghcr.io/home-assistant/home-assistant:2026.6
+    restart: unless-stopped
     networks:
-      # Add the container to the IOT network
-      - homeassistant
-    image: ghcr.io/home-assistant/home-assistant:stable
+      homeassistant: {}
+      vlan100: 
+        ipv4_address: 192.168.100.18
+      wifi: 
+        ipv4_address: 192.168.11.11
+        ipv6_address: fd00:11::11
+      iot: 
+        ipv4_address: 192.168.12.11
+        ipv6_address: fd00:12::11
     depends_on:
       - mqtt
       - zigbee2mqtt
@@ -18,7 +26,6 @@ services:
     environment:
       - PUID=${PUID:-1000}
       - PGID=${PGID:-1000}
-    restart: unless-stopped
     ports:
       - 80:8123
   mqtt:
@@ -64,6 +71,16 @@ services:
       # Pass the Zigbee adapter through to the container using the --device flag
       - /dev/ttyUSB-Zigbee:/dev/ttyUSB-Zigbee
 
+
 networks:
   homeassistant:
     name: homeassistant
+  vlan100: 
+    external: true
+    name: docker-static-vlan100
+  wifi: 
+    external: true
+    name: docker-static-wifi
+  iot: 
+    external: true
+    name: docker-static-iot

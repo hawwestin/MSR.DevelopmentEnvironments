@@ -1,0 +1,206 @@
+---
+- hosts: web
+  become: yes
+  tasks:
+
+  # make this more idempotent by checking if the file exists before trying to remove it
+  # make this faster by using rsync or synchronize instead of copy
+  # - name: Copy WordPress files
+  #   copy:
+  #     src: /mnt/BlogBackups/Restore/html_2026_05_01/
+  #     dest: /var/www/html/
+  #     owner: www-data
+  #     group: www-data
+  #     mode: '0755'
+  #     remote_src: yes
+
+  # - name: Sync WordPress files
+  #   synchronize:
+  #     src: "/mnt/BlogBackups/Restore/html_2026_05_01/"
+  #     dest: "/var/www/html/"
+  #     recursive: yes
+  #     delete: no
+  #   delegate_to: "{{ inventory_hostname }}"
+
+  - name: Sync WordPress files
+    ansible.builtin.command:
+      cmd: rsync -a --delete /mnt/BlogBackups/Restore/html_2026_05_01/ /var/www/html/
+    async: 3600
+    poll: 10
+
+  - name: Remove default index.html
+    file:
+      path: /var/www/html/index.html
+      state: absent
+
+  - name: Fix permissions
+    file:
+      path: /var/www/html
+      owner: www-data
+      group: www-data
+      recurse: yes
+
+- hosts: db
+  become: yes
+  vars_files:
+    - ../vault/secrets.yml
+  tasks:
+  - name: Check SQL dump file exists
+    stat:
+      path: /mnt/BlogBackups/Restore/dump.sql
+    register: dump_stat
+
+  - name: Fail when SQL dump is missing
+    fail:
+      msg: "SQL dump not found at /mnt/BlogBackups/Restore/dump.sql on the DB host"
+    when: not dump_stat.stat.exists
+
+  - name: Wait for MySQL to accept connections
+    wait_for:
+      host: 127.0.0.1
+      port: 3306
+      state: started
+      timeout: 300
+
+  - name: Import SQL dump (runs on DB host, async)
+    ansible.builtin.shell: |
+      mysql -u root -p'{{ mysql_root_password }}' {{ mysql_wp_db }} < /mnt/BlogBackups/Restore/dump.sql
+    args:
+      executable: /bin/bash
+    async: 3600
+    poll: 10
+    register: import_job
+
+  - name: Show import stdout/stderr
+    debug:
+      var: import_job
+
+  - name: Determine MySQL root access method
+    shell: |
+      if mysql -uroot -e "SELECT 1;" >/dev/null 2>&1; then
+        echo socket
+      elif mysql -uroot -p'{{ mysql_root_password }}' -e "SELECT 1;" >/dev/null 2>&1; then
+        echo password
+      else
+        echo none
+      fi
+    register: root_access
+    changed_when: false
+
+  - name: Fail when cannot access MySQL as root
+    fail:
+      msg: "Cannot access MySQL as root using socket or provided root password. Check MySQL auth and credentials."
+    when: root_access.stdout == 'none'
+
+  - name: Create WordPress database (socket)
+    shell: mysql -uroot -e "CREATE DATABASE IF NOT EXISTS \`{{ mysql_wp_db }}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+    when: root_access.stdout == 'socket'
+
+  - name: Create WordPress database (password)
+    shell: mysql -uroot -p'{{ mysql_root_password }}' -e "CREATE DATABASE IF NOT EXISTS \`{{ mysql_wp_db }}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+    when: root_access.stdout == 'password'
+
+  - name: Create WP DB user & grant privileges (socket)
+    shell: mysql -uroot -e "CREATE USER IF NOT EXISTS '{{ mysql_wp_user }}'@'localhost' IDENTIFIED BY '{{ mysql_wp_password }}'; CREATE USER IF NOT EXISTS '{{ mysql_wp_user }}'@'%' IDENTIFIED BY '{{ mysql_wp_password }}'; GRANT ALL PRIVILEGES ON \`{{ mysql_wp_db }}\`.* TO '{{ mysql_wp_user }}'@'localhost'; GRANT ALL PRIVILEGES ON \`{{ mysql_wp_db }}\`.* TO '{{ mysql_wp_user }}'@'%'; FLUSH PRIVILEGES;"
+    when: root_access.stdout == 'socket'
+
+  # - name: Create WP DB user & grant privileges (password)
+  #   shell: mysql -uroot -p'{{ mysql_root_password }}' -e "CREATE USER IF NOT EXISTS '{{ mysql_wp_user }}'@'localhost' IDENTIFIED BY '{{ mysql_wp_password }}'; CREATE USER IF NOT EXISTS '{{ mysql_wp_user }}'@'%' IDENTIFIED BY '{{ mysql_wp_password }}'; GRANT ALL PRIVILEGES ON \`{{ mysql_wp_db }}\`.* TO '{{ mysql_wp_user }}'@'localhost'; GRANT ALL PRIVILEGES ON \`{{ mysql_wp_db }}\`.* TO '{{ mysql_wp_user }}'@'%'; FLUSH PRIVILEGES;"
+  #   when: root_access.stdout == 'password'
+
+  - name: Update WP DB user to use mysql_native_password plugin
+    community.mysql.mysql_user:
+      name: "{{ mysql_wp_user }}"
+      password: "{{ mysql_wp_password }}"
+      host: "{{ item }}"
+      priv: "{{ mysql_wp_db }}.*:ALL"
+      plugin: "mysql_native_password"
+      state: present
+      login_user: "root"
+      login_password: "{{ mysql_root_password }}"
+    loop:
+      - "localhost"
+      - "%"
+    when: root_access.stdout == 'password'
+    no_log: true  # Hide sensitive output
+
+  - name: Check wp-config-db.php exists
+    stat:
+      path: /var/www/html/wp-config-db.php
+    register: wp_config_db_stat
+
+  - name: Fail when wp-config-db.php is missing
+    fail:
+      msg: "wp-config-db.php is missing from /var/www/html and WordPress cannot connect to the DB without it."
+    when: not wp_config_db_stat.stat.exists
+
+  - name: Read WordPress DB config from wp-config-db.php
+    shell: |
+      python3 - <<'PY'
+      import json, re
+      data = {}
+      pat = re.compile(r"define\(\s*'(DB_NAME|DB_USER|DB_PASSWORD|DB_HOST)'\s*,\s*'([^']+)'\s*\)")
+      with open('/var/www/html/wp-config-db.php', 'r', encoding='utf-8') as f:
+          for line in f:
+              m = pat.search(line)
+              if m:
+                  data[m.group(1)] = m.group(2)
+      print(json.dumps(data))
+      PY
+    register: wp_config_db_raw
+    changed_when: false
+
+  - name: Set WordPress DB config fact
+    set_fact:
+      wp_config_db: "{{ wp_config_db_raw.stdout | from_json }}"
+
+  - name: Fail when wp-config-db.php lacks DB settings
+    fail:
+      msg: "wp-config-db.php does not define all required DB settings (DB_NAME, DB_USER, DB_PASSWORD, DB_HOST)."
+    when: wp_config_db.DB_NAME is not defined or wp_config_db.DB_USER is not defined or wp_config_db.DB_PASSWORD is not defined or wp_config_db.DB_HOST is not defined
+
+  - name: Validate wp-config-db.php values against vault
+    fail:
+      msg: "DB config in wp-config-db.php does not match vault values. Check vault and wp-config-db.php for mismatched credentials."
+    when: wp_config_db.DB_NAME != mysql_wp_db or wp_config_db.DB_USER != mysql_wp_user or wp_config_db.DB_PASSWORD != mysql_wp_password
+
+  - name: Debug effective WP DB config
+    debug:
+      var: wp_config_db
+
+  - name: Test DB connection using WP config values
+    shell: |
+      mysql -u'{{ wp_config_db.DB_USER }}' -p'{{ wp_config_db.DB_PASSWORD }}' -h '{{ wp_config_db.DB_HOST }}' -e "USE {{ wp_config_db.DB_NAME }}; SHOW TABLES;"
+    register: wp_user_conn
+    failed_when: wp_user_conn.rc != 0
+    changed_when: false
+
+  - name: Debug WP user connection result
+    debug:
+      var: wp_user_conn
+
+  - name: Ensure WP constants for siteurl/home
+    lineinfile:
+      path: /var/www/html/wp-config.php
+      insertafter: "<?php"
+      line: "{{ item }}"
+      state: present
+    loop:
+      - "define('WP_HOME','http://192.168.200.5');"
+      - "define('WP_SITEURL','http://192.168.200.5');"
+    become: yes
+
+  - name: Update siteurl and home in wp_options
+    community.mysql.mysql_query:
+      login_user: "root"
+      login_password: "{{ mysql_root_password }}"
+      login_host: "localhost"
+      login_db: "{{ mysql_wp_db }}"  # Tutaj wskazujesz bazę zamiast dawać "USE ..."
+      query:
+        - UPDATE wp_options SET option_value = 'http://192.168.200.5' WHERE option_name = 'siteurl'
+        - UPDATE wp_options SET option_value = 'http://192.168.200.5' WHERE option_name = 'home'
+
+  - name: Restart Apache
+    service:
+      name: apache2
+      state: restartedexit
