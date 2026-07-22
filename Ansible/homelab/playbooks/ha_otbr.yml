@@ -6,7 +6,7 @@
   vars:
     # Update this if your docker compose service or container has a different name
     otbr_container_name: "otbr"
-    infra_if_name: "iot"
+    infra_if_name: "eth0"
 
   tasks:
     - name: Ensure OTBR IPv6 RA sysctl config exists
