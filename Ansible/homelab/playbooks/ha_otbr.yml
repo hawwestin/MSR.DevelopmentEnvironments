@@ -1,6 +1,6 @@
 ---
 # based on https://raw.githubusercontent.com/openthread/ot-br-posix/refs/heads/main/etc/docker/border-router/setup-host
-- name: Reconfigure IPv6 on Home Assistant host
+- name: Reconfigure IPv6 on OTBR
   hosts: OTBR
   become: true
   vars:
