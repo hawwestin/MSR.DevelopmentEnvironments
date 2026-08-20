@@ -12,5 +12,5 @@ scene: !include scenes.yaml
 http:
   use_x_forwarded_for: true
   trusted_proxies:
-    - 192.168.100.1  # Type her IP of pfSense (interface for HA network)
+    - 192.168.100.1  # Type here IP of pfSense (interface for HA network)
     - 127.0.0.1    # optional local loopback address if you have reverse proxy running on the same host as HA
