@@ -10,7 +10,7 @@ Investigate issues with Pihole on QNAP node. Things to check
 docker run -it --rm   --network host --cap-add=NET_ADMIN  nicolaka/netshoot
 ```
 
-## 🧰 Step 1: Identify physical interfaces
+##  Step 1: Identify physical interfaces
 
 From your earlier `ip a`, it appears that the NAS uses:
 
@@ -19,16 +19,16 @@ From your earlier `ip a`, it appears that the NAS uses:
 
 ---
 
-## 🧪 Step 2: Run `tcpdump` on both interfaces
+##  Step 2: Run `tcpdump` on both interfaces
 
 In two separate terminals (or in the background), run:
 
-### 📥 On `eth0`:
+###  On `eth0`:
 ```bash
 sudo tcpdump -i eth0 tcp port 53 -n
 ```
 
-### 📥 On `eth1`:
+###  On `eth1`:
 ```bash
 sudo tcpdump -i eth1 tcp port 53 -n
 ```
@@ -37,7 +37,7 @@ sudo tcpdump -i eth1 tcp port 53 -n
 
 ---
 
-## 🧪 Step 3: Perform a TCP DNS query in a third terminal
+##  Step 3: Perform a TCP DNS query in a third terminal
 
 From the `netshoot` container (in `host` mode):
 
@@ -47,7 +47,7 @@ dig +tcp google.com @8.8.8.8
 
 ---
 
-## 🔍 Step 4: Observe
+##  Step 4: Observe
 
 Pay attention to:
 
@@ -56,17 +56,17 @@ Pay attention to:
 
 ---
 
-## 🧠 What might you find?
+##  What might you find?
 
 | Observation | Conclusion |
 |-------------|------------|
 | SYN and SYN-ACK on the same interface | Routing is OK |
-| SYN leaves `eth0`, but SYN-ACK returns on `eth1` (or vice versa) | 🔥 Asymmetric routing — `balance-xor` is misrouting traffic |
+| SYN leaves `eth0`, but SYN-ACK returns on `eth1` (or vice versa) |  Asymmetric routing  `balance-xor` is misrouting traffic |
 | SYN is sent, but no SYN-ACK is received | Response is blocked or rejected by NAS/switch |
 
 ---
 
-## 🧭 Next steps?
+##  Next steps?
 
 If you confirm asymmetry, you have solid proof that the `balance-xor` mode is the culprit. Switching to `active-backup` or changing the aggregation algorithm on the switch (`MAC SA & DA`) are the only viable solutions.
 
@@ -77,19 +77,19 @@ These `tcpdump` logs are absolutely conclusive. We have a **textbook case of asy
 
 ---
 
-## 🧠 What does `tcpdump` show?
+##  What does `tcpdump` show?
 
-### 🔍 On the `eth1` interface (outgoing):
+###  On the `eth1` interface (outgoing):
 - We see TCP `SYN` and `PUSH` packets from the NAS (192.168.50.247) to 8.8.8.8:53.
 - The NAS is sending DNS queries over TCP correctly.
 
-### 🔍 On the `eth0` interface (incoming):
+###  On the `eth0` interface (incoming):
 - We see `SYN-ACK` responses from 8.8.8.8 to the NAS.
-- But the NAS **does not respond** to these packets — no `ACK`, no further communication.
+- But the NAS **does not respond** to these packets  no `ACK`, no further communication.
 
 ---
 
-## 🔥 What does this mean?
+##  What does this mean?
 
 - The `SYN` packet leaves via `eth1`, but the `SYN-ACK` response returns via `eth0`.
 - The NAS (or its TCP/IP stack) **rejects the response** because it does not expect it on this interface.
@@ -97,33 +97,33 @@ These `tcpdump` logs are absolutely conclusive. We have a **textbook case of asy
 
 ---
 
-## ✅ Confirmed diagnosis
+##  Confirmed diagnosis
 
-> 🔴 Your NAS in `balance-xor` mode is splitting TCP packets inconsistently — sending via one interface and receiving via another. This breaks TCP session rules and causes DNS over TCP errors.
+>  Your NAS in `balance-xor` mode is splitting TCP packets inconsistently  sending via one interface and receiving via another. This breaks TCP session rules and causes DNS over TCP errors.
 
 ---
 
-## 🛠️ What now?
+##  What now?
 
-### 🔧 Option 1: Change port aggregation mode on the switch
+###  Option 1: Change port aggregation mode on the switch
 
 On the Zyxel switch, set the LAG algorithm to **MAC SA & DA** (source and destination MAC). This increases the likelihood that TCP packets and their responses follow the same path.
 
-### 🔁 Option 2: Switch the NAS to `active-backup` mode
+###  Option 2: Switch the NAS to `active-backup` mode
 
 In the QNAP GUI:
-- Control Panel → Network & Virtual Switch → Port Trunking
-- Edit LAG → Mode: **Failover (Active-Backup)**
+- Control Panel > Network & Virtual Switch > Port Trunking
+- Edit LAG > Mode: **Failover (Active-Backup)**
 
-This **completely eliminates asymmetry** — only one interface is active, the other is on standby.
+This **completely eliminates asymmetry** - only one interface is active, the other is on standby.
 
 ---
 
-## 🧪 After the change:
+##  After the change:
 
 - Restart `netshoot` in `host` mode
 - Perform `dig +tcp google.com @8.8.8.8`
-- If it works — problem solved
+- If it works - problem solved
 
 ---
 
