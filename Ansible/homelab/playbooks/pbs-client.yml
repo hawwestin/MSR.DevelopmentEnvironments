@@ -1,0 +1,193 @@
+# Official documentation:
+# https://pbs.proxmox.com/docs/installation.html#apt-based-proxmox-backup-client-repository
+# https://pbs.proxmox.com/docs/backup-client.html#client-usage
+---
+- name: Install PBS Client
+  hosts: raspberrypi
+  become: true
+  gather_facts: true
+
+  vars:
+    pbs_client_repository: http://download.proxmox.com/debian/pbs-client
+    pbs_client_supported_releases:
+      - bookworm
+      - trixie
+    pbs_client_keyring: /etc/apt/keyrings/proxmox-release.gpg
+    pbs_client_sources: /etc/apt/sources.list.d/pbs-client.sources
+    pbs_client_config_dir: /etc/proxmox-backup-client
+    pbs_client_environment_file: /etc/proxmox-backup-client/environment
+    pbs_client_service: proxmox-backup-client.service
+    pbs_client_timer: proxmox-backup-client.timer
+    pbs_backup_paths:
+      - name: etc
+        path: /etc
+      - name: opt
+        path: /opt
+      - name: docker
+        path: /docker
+      - name: docker-volumes
+        path: /var/lib/docker/volumes
+
+  tasks:
+    - name: Validate PBS client platform
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.os_family == 'Debian'
+          - ansible_facts.architecture == 'aarch64'
+          - ansible_facts.distribution_release in pbs_client_supported_releases
+        fail_msg: >-
+          PBS client installation requires 64-bit Debian-family Linux with a
+          supported release. Detected {{ ansible_facts.distribution }}
+          {{ ansible_facts.distribution_release }} on
+          {{ ansible_facts.architecture }}.
+
+    - name: Validate PBS connection settings
+      ansible.builtin.assert:
+        that:
+          - pbs_server is defined and pbs_server | length > 0
+          - pbs_datastore is defined and pbs_datastore | length > 0
+          - pbs_namespace is defined and pbs_namespace | length > 0
+          - pbs_api_token_id is defined and pbs_api_token_id | length > 0
+          - pbs_api_token_secret is defined and pbs_api_token_secret | length > 0
+          - pbs_fingerprint is defined and pbs_fingerprint | length > 0
+        fail_msg: >-
+          Define PBS server, datastore, namespace, API token ID, API token
+          secret, and TLS fingerprint variables through inventory and Vault.
+
+    - name: Check PBS backup source paths
+      ansible.builtin.stat:
+        path: "{{ item.path }}"
+      loop: "{{ pbs_backup_paths }}"
+      register: pbs_backup_path_results
+
+    - name: Require configured PBS backup source paths
+      ansible.builtin.assert:
+        that: item.stat.exists and item.stat.isdir
+        fail_msg: "PBS backup source path does not exist or is not a directory: {{ item.item.path }}"
+      loop: "{{ pbs_backup_path_results.results }}"
+
+    - name: Install PBS client repository prerequisites
+      ansible.builtin.apt:
+        name:
+          - ca-certificates
+          - gnupg
+        state: present
+        update_cache: true
+
+    - name: Ensure APT keyring directory exists
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Install Proxmox archive signing key
+      ansible.builtin.get_url:
+        url: >-
+          https://enterprise.proxmox.com/debian/proxmox-release-
+          {{ ansible_facts.distribution_release }}.gpg
+        dest: "{{ pbs_client_keyring }}"
+        mode: '0644'
+
+    - name: Configure PBS client APT repository
+      ansible.builtin.copy:
+        dest: "{{ pbs_client_sources }}"
+        mode: '0644'
+        content: |
+          Types: deb
+          URIs: {{ pbs_client_repository }}
+          Suites: {{ ansible_facts.distribution_release }}
+          Components: main
+          Architectures: arm64
+          Signed-By: {{ pbs_client_keyring }}
+
+    - name: Install PBS Client
+      ansible.builtin.apt:
+        name: proxmox-backup-client
+        state: present
+        update_cache: true
+
+    - name: Verify PBS Client installation
+      ansible.builtin.command: proxmox-backup-client version
+      changed_when: false
+
+    - name: Ensure PBS client configuration directory exists
+      ansible.builtin.file:
+        path: "{{ pbs_client_config_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0700'
+
+    - name: Install PBS client environment file
+      ansible.builtin.copy:
+        dest: "{{ pbs_client_environment_file }}"
+        owner: root
+        group: root
+        mode: '0600'
+        content: |
+          PBS_REPOSITORY={{ pbs_api_token_id }}@{{ pbs_server }}:{{ pbs_datastore }}
+          PBS_PASSWORD={{ pbs_api_token_secret }}
+          PBS_FINGERPRINT={{ pbs_fingerprint }}
+          PBS_NAMESPACE={{ pbs_namespace }}
+      no_log: true
+      notify: Restart PBS backup timer
+
+    - name: Install PBS backup service
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/{{ pbs_client_service }}
+        owner: root
+        group: root
+        mode: '0644'
+        content: |
+          [Unit]
+          Description=Back up Raspberry Pi files to Proxmox Backup Server
+          Wants=network-online.target
+          After=network-online.target
+
+          [Service]
+          Type=oneshot
+          EnvironmentFile={{ pbs_client_environment_file }}
+          ExecStart=/usr/bin/proxmox-backup-client backup etc.pxar:/etc opt.pxar:/opt docker.pxar:/docker docker-volumes.pxar:/var/lib/docker/volumes --backup-type host --backup-id raspberrypi --change-detection-mode metadata
+          Nice=10
+          IOSchedulingClass=best-effort
+          IOSchedulingPriority=7
+      notify: Reload systemd and restart PBS backup timer
+
+    - name: Install PBS backup timer
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/{{ pbs_client_timer }}
+        owner: root
+        group: root
+        mode: '0644'
+        content: |
+          [Unit]
+          Description=Daily Raspberry Pi PBS backup
+
+          [Timer]
+          OnCalendar=*-*-* 03:30:00
+          Persistent=true
+          RandomizedDelaySec=30m
+          Unit={{ pbs_client_service }}
+
+          [Install]
+          WantedBy=timers.target
+      notify: Reload systemd and restart PBS backup timer
+
+    - name: Enable and start PBS backup timer
+      ansible.builtin.systemd:
+        name: "{{ pbs_client_timer }}"
+        enabled: true
+        state: started
+        daemon_reload: true
+
+  handlers:
+    - name: Restart PBS backup timer
+      ansible.builtin.systemd:
+        name: "{{ pbs_client_timer }}"
+        state: restarted
+
+    - name: Reload systemd and restart PBS backup timer
+      ansible.builtin.systemd:
+        name: "{{ pbs_client_timer }}"
+        state: restarted
+        daemon_reload: true

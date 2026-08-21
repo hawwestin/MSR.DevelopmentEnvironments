@@ -1,0 +1,8 @@
+# PBS client settings for Raspberry Pi hosts.
+pbs_server: pbs.local.hawwestin.net
+pbs_datastore: QnapLocal
+pbs_namespace: raspberrypi
+pbs_api_token_id: raspberrypi@pbs!backup
+pbs_fingerprint: ""
+
+# Define pbs_api_token_secret in an encrypted Vault file.
