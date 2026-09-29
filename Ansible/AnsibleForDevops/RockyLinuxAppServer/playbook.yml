@@ -1,5 +1,5 @@
 ---
-- hosts: all
+- hosts: app
   become: yes
 
   vars:
@@ -36,7 +36,7 @@
 
     - name: Install app dependencies defined in package.json.
       npm: path={{ node_apps_location }}/app
-      
+
     - name: Check list of running Node.js apps.
       command: npx forever list
       register: forever_list

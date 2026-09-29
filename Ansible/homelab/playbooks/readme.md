@@ -20,6 +20,8 @@ ansible-playbook  playbooks/bootstrap_ansible_mgr.yml \
 -e ansible_mgr_ssh_pub_key="$(cat ~/.ssh/id_ansible.pub)" \
 -K
 
+ansible-playbook Ansible/homelab/playbooks/bootstrap_ansible_mgr.yml --list-hosts
+
 ansible-playbook Ansible/homelab/playbooks/bootstrap_ansible_mgr.yml
 ```
 
