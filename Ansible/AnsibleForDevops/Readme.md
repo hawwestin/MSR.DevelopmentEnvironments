@@ -3,7 +3,19 @@ This Directory was created as a practice scenarios included in Ansible For Devop
 
 More on official github repo https://github.com/geerlingguy/ansible-for-devops 
 
-## Rocky linux prep
+# Playbooks 
+
+```bash
+ansible-playbook Ansible/AnsibleForDevops/RockyLinuxAppServer/playbook.yml
+```
+
+Test syntax
+```bash
+ansible-playbook Ansible/AnsibleForDevops/RockyLinuxAppServer/playbook.yml --syntax-check
+ansible-playbook Ansible/AnsibleForDevops/RockyLinuxAppServer/playbook.yml --list-hosts
+ ```
+
+# Rocky linux prep
 Create user for ansible
 ```bash
 useradd -m -s /bin/bash ansible_mgr
