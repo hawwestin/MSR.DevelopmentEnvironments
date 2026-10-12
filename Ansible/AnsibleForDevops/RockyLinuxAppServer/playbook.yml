@@ -27,6 +27,7 @@
         name: "https://rpms.remirepo.net/enterprise/remi-release-10.rpm"
         state: present
 
+    # Minimal LXC container images for Rocky Linux do not include the firewalld package by default 
     - name: Ensure firewalld is stopped (since this is for testing).
       ansible.builtin.service:
         name: firewalld
@@ -55,6 +56,7 @@
       ansible.builtin.copy:
         src: app
         dest: "{{ node_apps_location }}"
+      notify: Restart Node.js app after changes
 
     - name: Install app dependencies defined in package.json.
       ansible.builtin.npm:
@@ -68,3 +70,8 @@
     - name: Start example Node.js app.
       ansible.builtin.command: "npx forever start {{ node_apps_location }}/app/app.js"
       when: "forever_list.stdout.find(node_apps_location + '/app/app.js') == -1"
+
+  handlers:
+    - name: Restart Node.js app after changes
+      ansible.builtin.command: "npx forever restart {{ node_apps_location }}/app/app.js"
+      when: "forever_list.stdout.find(node_apps_location + '/app/app.js') != -1"
