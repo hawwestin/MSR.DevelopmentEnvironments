@@ -1,0 +1,9 @@
+---
+- name: Bootstrap new LXC container
+  hosts: proxmox_host # proxmox host, not the container
+  gather_facts: false
+  roles:
+    - role: lxc_bootstrap
+      vars:
+        lxc_vmid: 100 # Edit for your new LXC container ID
+        lxc_ansible_pub_key: "{{ lookup('file', '~/.ssh/id_ansible.pub') }}"

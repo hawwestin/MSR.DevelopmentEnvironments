@@ -1,0 +1,22 @@
+- name: Bootstrap a new Rocky Linux LXC (without requiring SSH in the container)
+  hosts: proxmox_server  # Specify the Proxmox host, NOT the container
+  gather_facts: no
+  vars:
+    vmid: 100 # Your container ID
+    ansible_pub_key: "{{ lookup('file', '~/.ssh/id_ansible.pub') }}"
+  tasks:
+    - name: Install openssh-server in the container
+      ansible.builtin.command: "pct exec {{ vmid }} -- dnf install -y openssh-server"
+
+    - name: Generate SSH host keys and start the service
+      ansible.builtin.command: "pct exec {{ vmid }} -- bash -c 'ssh-keygen -A && systemctl enable --now sshd'"
+
+    - name: Create the ansible_mgr user
+      ansible.builtin.command: "pct exec {{ vmid }} -- useradd -m -s /bin/bash ansible_mgr"
+      ignore_errors: true # Ignore the error if the user already exists in the template
+
+    - name: Grant passwordless sudo privileges (for privilege escalation)
+      ansible.builtin.command: "pct exec {{ vmid }} -- bash -c 'echo \"ansible_mgr ALL=(ALL) NOPASSWD: ALL\" > /etc/sudoers.d/ansible_mgr && chmod 0440 /etc/sudoers.d/ansible_mgr'"
+
+    - name: Add the SSH public key directly to authorized_keys
+      ansible.builtin.command: "pct exec {{ vmid }} -- bash -c 'mkdir -p /home/ansible_mgr/.ssh && echo \"{{ ansible_pub_key }}\" > /home/ansible_mgr/.ssh/authorized_keys && chown -R ansible_mgr:ansible_mgr /home/ansible_mgr/.ssh && chmod 700 /home/ansible_mgr/.ssh && chmod 600 /home/ansible_mgr/.ssh/authorized_keys'"
