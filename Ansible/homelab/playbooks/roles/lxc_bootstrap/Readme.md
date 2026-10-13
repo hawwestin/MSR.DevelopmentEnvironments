@@ -10,6 +10,16 @@ Add to sudoers
 echo "ansible_mgr ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/ansible_mgr
 chmod 0440 /etc/sudoers.d/ansible_mgr
 ```
+
+install sshd
+```bash
+dnf install -y openssh-server
+ssh-keygen -A
+systemctl enable --now sshd
+systemctl status sshd
+```
+
+
 Enable password auth for time of SSH keys copy. Using Sed or via nano. 
 
 ```bash

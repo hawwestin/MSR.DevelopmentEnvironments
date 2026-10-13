@@ -6,6 +6,14 @@
       - lxc_ansible_pub_key | length > 0
     fail_msg: "Both 'lxc_vmid' and 'lxc_ansible_pub_key' must be provided."
 
+- name: Test connectivity to the LXC container
+  ansible.builtin.command: "pct exec {{ lxc_vmid }} -- echo 'LXC container is reachable'"
+  register: connectivity_test
+  failed_when:
+    - connectivity_test.rc != 0
+    - "'LXC container is reachable' not in connectivity_test.stdout"
+  changed_when: false
+
 - name: Install openssh-server via pct
   ansible.builtin.command: "pct exec {{ lxc_vmid }} -- dnf install -y openssh-server"
   register: ssh_install
