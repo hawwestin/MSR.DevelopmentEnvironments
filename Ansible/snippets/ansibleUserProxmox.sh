@@ -12,3 +12,4 @@ pveum acl modify /storage -user ansible@pve -role PVEDatastoreAdmin
 
 # Create an API token for the user (this is more secure than using a password)
 pveum user token add ansible@pve token-ansible --privsep 0
+# Add the generated token secret to your .env file for Ansible to use
