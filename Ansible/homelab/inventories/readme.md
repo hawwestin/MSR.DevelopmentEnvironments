@@ -46,7 +46,7 @@ ansible-galaxy collection install community.general
 ansible-galaxy collection install community.proxmox
 ```
 Provision ansible user on proxmxo server/cluster using [ansibleUserProxmox](MSR.DevelopmentEnvironments/Ansible/snippets/ansibleUserProxmox.sh)
-
+Create private .env.proxmox file with Real secrets 
 ```bash
 source Ansible/homelab/inventories/.env.proxmox
 ansible-inventory -i Ansible/homelab/inventories/proxmox.proxmox.yml --graph
