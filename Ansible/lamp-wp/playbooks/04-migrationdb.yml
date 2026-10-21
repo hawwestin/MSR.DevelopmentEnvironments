@@ -1,45 +1,4 @@
 ---
-- hosts: web
-  become: yes
-  tasks:
-
-  # make this more idempotent by checking if the file exists before trying to remove it
-  # make this faster by using rsync or synchronize instead of copy
-  # - name: Copy WordPress files
-  #   copy:
-  #     src: /mnt/BlogBackups/Restore/html_2026_05_01/
-  #     dest: /var/www/html/
-  #     owner: www-data
-  #     group: www-data
-  #     mode: '0755'
-  #     remote_src: yes
-
-  # - name: Sync WordPress files
-  #   synchronize:
-  #     src: "/mnt/BlogBackups/Restore/html_2026_05_01/"
-  #     dest: "/var/www/html/"
-  #     recursive: yes
-  #     delete: no
-  #   delegate_to: "{{ inventory_hostname }}"
-
-  - name: Sync WordPress files
-    ansible.builtin.command:
-      cmd: rsync -a --delete /mnt/BlogBackups/Restore/html_2026_05_01/ /var/www/html/
-    async: 3600
-    poll: 10
-
-  - name: Remove default index.html
-    file:
-      path: /var/www/html/index.html
-      state: absent
-
-  - name: Fix permissions
-    file:
-      path: /var/www/html
-      owner: www-data
-      group: www-data
-      recurse: yes
-
 - hosts: db
   become: yes
   vars_files:
@@ -162,7 +121,12 @@
   - name: Validate wp-config-db.php values against vault
     fail:
       msg: "DB config in wp-config-db.php does not match vault values. Check vault and wp-config-db.php for mismatched credentials."
-    when: wp_config_db.DB_NAME != mysql_wp_db or wp_config_db.DB_USER != mysql_wp_user or wp_config_db.DB_PASSWORD != mysql_wp_password
+    when: wp_config_db.DB_NAME != mysql_wp_db or wp_config_db.DB_USER != mysql_wp_user 
+
+  - name: Validate wp-config-db.php MySQL Password against vault
+    fail:
+      msg: "DB config in wp-config-db.php does not match vault values. Check vault and wp-config-db.php for mismatched credentials."
+    when: wp_config_db.DB_PASSWORD != mysql_wp_password
 
   - name: Debug effective WP DB config
     debug:
@@ -203,4 +167,4 @@
   - name: Restart Apache
     service:
       name: apache2
-      state: restartedexit
+      state: restarted
