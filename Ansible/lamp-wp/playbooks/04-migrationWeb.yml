@@ -40,3 +40,23 @@
       group: www-data
       recurse: yes
 
+  - name: Add WP_ENVIRONMENT_TYPE to wp-config.php
+    lineinfile:
+      path: /var/www/html/wp-config.php
+      line: "define( 'WP_ENVIRONMENT_TYPE', 'local' );"
+      insertbefore: "/\\* That's all, stop editing! Happy blogging. \\*/"
+
+  - name: Add JETPACK_DEV_DEBUG to wp-config.php
+    lineinfile:
+      path: /var/www/html/wp-config.php
+      line: "define( 'JETPACK_DEV_DEBUG', true );"
+      insertbefore: "/\\* That's all, stop editing! Happy blogging. \\*/"
+
+  # replace the following lines in wp-config.php define('FS_METHOD', 'ssh2'); todefine('FS_METHOD', 'direct');
+  - name: Replace FS_METHOD in wp-config.php
+    replace:
+      path: /var/www/html/wp-config-db.php
+      regexp: "define('FS_METHOD', 'ssh2');"
+      replace: "define('FS_METHOD', 'direct');"
+
+    
