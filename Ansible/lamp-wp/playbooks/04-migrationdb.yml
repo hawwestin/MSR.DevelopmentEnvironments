@@ -93,8 +93,14 @@
       msg: "wp-config-db.php is missing from /var/www/html and WordPress cannot connect to the DB without it."
     when: not wp_config_db_stat.stat.exists
 
+  - name: Replace FS_METHOD in wp-config-db.php
+    replace:
+      path: /var/www/html/wp-config-db.php
+      regexp: "define\\('FS_METHOD', 'ssh2'\\);"
+      replace: "define('FS_METHOD', 'direct');"
+
   #  Remove commented duplicate DB_NAME, DB_USER, DB_PASSWORD, DB_HOST definitions from wp-config.php if they exist
-  - name: Remove commented duplicates DB constants from wp-config.php
+  - name: Remove commented duplicates DB constants from wp-config-db.php
     lineinfile:
       path: /var/www/html/wp-config-db.php
       regexp: '^//.*?(DB_NAME|DB_USER|DB_PASSWORD|DB_HOST).*'
@@ -135,9 +141,9 @@
       msg: "DB config in wp-config-db.php does not match vault values. Check vault and wp-config-db.php for mismatched credentials."
     when: wp_config_db.DB_PASSWORD != mysql_wp_password
 
-  - name: Debug effective WP DB config
-    debug:
-      var: wp_config_db
+  # - name: Debug effective WP DB config
+  #   debug:
+  #     var: wp_config_db
 
   - name: Test DB connection using WP config values
     shell: |
@@ -153,7 +159,7 @@
   - name: Ensure WP constants for siteurl/home
     lineinfile:
       path: /var/www/html/wp-config.php
-      insertafter: "<?php"
+      insertbefore: "/\\* That's all, stop editing! Happy blogging. \\*/"
       line: "{{ item }}"
       state: present
     loop:

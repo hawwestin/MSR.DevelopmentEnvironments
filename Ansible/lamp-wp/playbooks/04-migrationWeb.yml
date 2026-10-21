@@ -52,11 +52,11 @@
       line: "define( 'JETPACK_DEV_DEBUG', true );"
       insertbefore: "/\\* That's all, stop editing! Happy blogging. \\*/"
 
-  # replace the following lines in wp-config.php define('FS_METHOD', 'ssh2'); todefine('FS_METHOD', 'direct');
-  - name: Replace FS_METHOD in wp-config.php
+  # replace the following lines in wp-config.php define('FS_METHOD', 'ssh2'); to define('FS_METHOD', 'direct');
+  - name: Replace FS_METHOD in wp-config-db.php
     replace:
       path: /var/www/html/wp-config-db.php
-      regexp: "define('FS_METHOD', 'ssh2');"
+      regexp: "define\\('FS_METHOD', 'ssh2'\\);"
       replace: "define('FS_METHOD', 'direct');"
 
     
