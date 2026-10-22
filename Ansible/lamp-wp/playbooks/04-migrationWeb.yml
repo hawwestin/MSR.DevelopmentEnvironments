@@ -1,6 +1,6 @@
 ---
 - hosts: web
-  become: yes
+  become: true
   tasks:
 
   # make this more idempotent by checking if the file exists before trying to remove it

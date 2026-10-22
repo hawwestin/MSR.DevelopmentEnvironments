@@ -18,7 +18,7 @@
   command: wp core update-db
   args:
     chdir: /var/www/html # Ścieżka katalogu roboczego z plikami portalu
-  become: yes
+  become: true
   become_user: www-data  # Zapobiega błędom uprawnień i problemom z tworzeniem plików jako root
   register: wp_db_update
   changed_when: "'Database updated successfully' in wp_db_update.stdout"
@@ -29,7 +29,7 @@
   command: wp core update
   args:
     chdir: /var/www/html
-  become: yes
+  become: true
   become_user: www-data
   register: wp_core_update
   changed_when: "'WordPress updated successfully' in wp_core_update.stdout"
@@ -39,7 +39,7 @@
   command: wp plugin update --all
   args:
     chdir: /var/www/html
-  become: yes
+  become: true
   become_user: www-data
   register: wp_plugins_update
   changed_when: "'Success: Updated' in wp_plugins_update.stdout"
@@ -49,7 +49,7 @@
   command: wp theme update --all
   args:
     chdir: /var/www/html
-  become: yes
+  become: true
   become_user: www-data
   register: wp_themes_update
   changed_when: "'Success: Updated' in wp_themes_update.stdout"

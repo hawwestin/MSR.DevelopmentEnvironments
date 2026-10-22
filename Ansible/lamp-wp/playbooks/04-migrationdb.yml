@@ -1,6 +1,6 @@
 ---
 - hosts: db
-  become: yes
+  become: true
   vars_files:
     - ../vault/secrets.yml
   tasks:
@@ -165,7 +165,7 @@
     loop:
       - "define('WP_HOME','http://192.168.200.5');"
       - "define('WP_SITEURL','http://192.168.200.5');"
-    become: yes
+    become: true
 
   - name: Update siteurl and home in wp_options
     community.mysql.mysql_query:
