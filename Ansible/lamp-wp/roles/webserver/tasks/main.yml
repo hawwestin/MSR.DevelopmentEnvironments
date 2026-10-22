@@ -5,12 +5,27 @@
   # apt:
   #   name: apache2
   #   state: present
+  vars:
+    php_Extensions:
+      - cli
+      - common
+      - mysql
+      - xml
+      - curl
+      - mbstring
 
 - name: Enable Apache modules
   apache2_module:
     name: rewrite
     state: present
   notify: Restart Apache
+
+# require for php 8+
+- name: Dodaj repozytorium PPA dla najnowszego PHP
+  apt_repository:
+    repo: 'ppa:ondrej/php'
+    state: present
+    update_cache: yes
 
 - name: Install PHP {{ php_version }} + modules
   raw: apt-get install -y php{{ php_version }} php{{ php_version }}-mysql php{{ php_version }}-xml php{{ php_version }}-gd php{{ php_version }}-curl php{{ php_version }}-mbstring php{{ php_version }}-zip php{{ php_version }}-intl libapache2-mod-php{{ php_version }}
@@ -28,6 +43,19 @@
   #     - "php{{ php_version }}-intl"
   #     - "libapache2-mod-php{{ php_version }}"
   #   state: present
+
+- name: Wylacz stary modul PHP 7.4 w Apache
+  # Używamy command, ponieważ stary moduł musi ustąpić miejsca nowemu
+  ansible.builtin.command: a2dismod php7.4
+  register: dismod_result
+  failed_when: false # Zapobiega wywaleniu się, jeśli moduł był już wyłączony
+  changed_when: "'Disabling' in dismod_result.stdout"
+
+- name: Wlacz nowy modul PHP w Apache
+  ansible.builtin.command: "a2enmod php{{ php_version }}"
+  register: enmod_result
+  changed_when: "'Enabling' in enmod_result.stdout"
+  notify: Restart Apache
 
 # - name: Restart Apache
 #   service:
