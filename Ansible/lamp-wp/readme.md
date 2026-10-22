@@ -4,8 +4,13 @@ This fix issue with paths to ansible roles.
 By default it looks for them under playbooks directory. 
 
 ```bash
+source Ansible/lamp-wp/.env
+# or load content
 export ANSIBLE_CONFIG=$PWD/Ansible/lamp-wp/ansible.cfg
 export ANSIBLE_VAULT_PASSWORD_FILE=~/.ansible/Lamp-vault-password
+
+#test
+ansible -i Ansible/lamp-wp/inventories/hosts.ini all -m ping
 ```
 
 
