@@ -23,7 +23,7 @@ ansible/lamp-wp/
  │        └── all.yml
  ├── roles/
  │    ├── common/          # apt update, base packets, timezone, firewall
- │    ├── webserver/       # Apache, PHP 7.4.3, modules
+ │    ├── webserver/       # Apache, configurable PHP (default 8.4), modules
  │    ├── mysql/           # MySQL 8.0.41, user, db
  │    └── wordpress/       # install WP, perms, wp-config
  ├── playbooks/
@@ -37,3 +37,6 @@ ansible/lamp-wp/
       └── wordpress-6.9.4.tar.gz
 
 
+# web server data
+
+The deployment currently targets Ubuntu 22.04 and 24.04 and defaults to PHP 8.4 through the Ondrej PHP PPA. The host details below are a historical Ubuntu 20.04 / PHP 7.4 snapshot, not the current role configuration.

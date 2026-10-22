@@ -44,18 +44,38 @@
   #     - "libapache2-mod-php{{ php_version }}"
   #   state: present
 
-- name: Wylacz stary modul PHP 7.4 w Apache
-  # Używamy command, ponieważ stary moduł musi ustąpić miejsca nowemu
-  ansible.builtin.command: a2dismod php7.4
-  register: dismod_result
-  failed_when: false # Zapobiega wywaleniu się, jeśli moduł był już wyłączony
-  changed_when: "'Disabling' in dismod_result.stdout"
+- name: Find enabled Apache PHP modules
+  ansible.builtin.find:
+    paths: /etc/apache2/mods-enabled
+    patterns: 'php*.load'
+    file_type: any
+  register: enabled_php_modules
 
-- name: Wlacz nowy modul PHP w Apache
-  ansible.builtin.command: "a2enmod php{{ php_version }}"
-  register: enmod_result
-  changed_when: "'Enabling' in enmod_result.stdout"
+- name: Disable conflicting Apache PHP modules
+  apache2_module:
+    name: "{{ item.path | basename | regex_replace('\\.load$', '') }}"
+    state: absent
+  loop: "{{ enabled_php_modules.files }}"
+  when: (item.path | basename) != ('php' ~ php_version ~ '.load')
   notify: Restart Apache
+
+- name: Enable selected Apache PHP module
+  apache2_module:
+    name: "php{{ php_version }}"
+    state: present
+  notify: Restart Apache
+
+- name: Check selected PHP CLI alternative
+  ansible.builtin.command: update-alternatives --query php
+  register: php_cli_alternative
+  changed_when: false
+  failed_when: false
+  become: true
+
+- name: Select PHP {{ php_version }} for CLI
+  ansible.builtin.command: "update-alternatives --set php /usr/bin/php{{ php_version }}"
+  when: "('Value: /usr/bin/php' ~ php_version) not in php_cli_alternative.stdout"
+  become: true
 
 # - name: Restart Apache
 #   service:

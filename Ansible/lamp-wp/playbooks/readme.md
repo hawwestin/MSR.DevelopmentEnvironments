@@ -14,14 +14,15 @@ ansible-playbook -i Ansible/lamp-wp/inventories/hosts.ini Ansible/lamp-wp/playbo
 ansible-playbook -i Ansible/lamp-wp/inventories/hosts.ini Ansible/lamp-wp/playbooks/03-database.yml --ask-vault-pass
 ansible-playbook -i Ansible/lamp-wp/inventories/hosts.ini Ansible/lamp-wp/playbooks/04-migrationweb.yml --ask-vault-pass -vvv
 ansible-playbook -i Ansible/lamp-wp/inventories/hosts.ini Ansible/lamp-wp/playbooks/04-migrationdb.yml -vvv --ask-vault-pass 
-
+ansible-playbook -i Ansible/lamp-wp/inventories/hosts.ini Ansible/lamp-wp/playbooks/05-update_wp.yml
 ```
 
 ## Notes
 - Files used for restore are located in `\\fileserver.msr.loc\BlogBackups` 
 - All package management uses `raw` module (not `apt` module) to support Python 3.8
 - All MySQL operations use `raw` module (not `mysql_*` modules) to support Python 3.8
-- Playbooks 01-03 are fully tested and working on Ubuntu 20.04 with Python 3.8
+- The current webserver target is Ubuntu 22.04 and 24.04. PHP is selected with `php_version` and defaults to 8.4 via `ppa:ondrej/php`; set `php_version` in inventory to override it.
+- Ubuntu 20.04 with Python 3.8 was the previously tested platform; that historical test does not certify the current PHP setup on Ubuntu 22.04 or 24.04.
 
 ## Pre-requisites for migration
 Copy latest Zip backup to `\\fileserver.msr.loc\BlogBackups` 
