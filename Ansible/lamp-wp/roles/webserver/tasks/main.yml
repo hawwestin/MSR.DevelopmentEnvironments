@@ -1,4 +1,17 @@
 ---
+- name: Validate Ubuntu release for PHP packages
+  ansible.builtin.raw: |
+    set -eu
+    . /etc/os-release
+    case "${VERSION_ID:-}" in
+      22.04|24.04) ;;
+      *)
+        echo "Ubuntu ${VERSION_ID:-unknown} is unsupported for this PHP deployment; upgrade to Ubuntu 22.04 or 24.04 first." >&2
+        exit 1
+        ;;
+    esac
+  changed_when: false
+
 - name: Install Apache
   raw: apt-get install -y apache2
   become: true
@@ -21,11 +34,18 @@
   notify: Restart Apache
 
 # require for php 8+
-- name: Dodaj repozytorium PPA dla najnowszego PHP
-  apt_repository:
-    repo: 'ppa:ondrej/php'
-    state: present
-    update_cache: yes
+- name: Add Ondrej PHP PPA
+  ansible.builtin.raw: |
+    set -e
+    apt-get install -y software-properties-common
+    if ! grep -RqsE 'ppa\.launchpad(net|content)\.net/ondrej/php' /etc/apt/sources.list.d; then
+      add-apt-repository -y ppa:ondrej/php
+      echo 'Added Ondrej PHP PPA'
+    fi
+    apt-get update
+  register: php_ppa_setup
+  changed_when: "'Added Ondrej PHP PPA' in php_ppa_setup.stdout"
+  become: true
 
 - name: Install PHP {{ php_version }} + modules
   raw: apt-get install -y php{{ php_version }} php{{ php_version }}-mysql php{{ php_version }}-xml php{{ php_version }}-gd php{{ php_version }}-curl php{{ php_version }}-mbstring php{{ php_version }}-zip php{{ php_version }}-intl libapache2-mod-php{{ php_version }}
