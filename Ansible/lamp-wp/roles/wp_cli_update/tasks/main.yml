@@ -1,0 +1,55 @@
+---
+# KROK 1: Weryfikacja obecności narzędzia WP-CLI
+- name: Sprawdz, czy WP-CLI jest zainstalowane
+  stat:
+    path: /usr/local/bin/wp
+  register: wp_cli_stat
+
+# KROK 2: Instalacja WP-CLI, jeśli nie zostało znalezione na maszynie docelowej
+- name: Pobierz i zainstaluj WP-CLI
+  get_url:
+    url: https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+    dest: /usr/local/bin/wp
+    mode: '0755'
+  when: not wp_cli_stat.stat.exists
+
+# KROK 3: Aktualizacja bazy danych WordPress (rozwiązuje komunikaty o konieczności naprawy bazy)
+- name: Zaktualizuj schemat bazy danych WordPressa (jesli wymagane)
+  command: wp core update-db
+  args:
+    chdir: /var/www/html # Ścieżka katalogu roboczego z plikami portalu
+  become: yes
+  become_user: www-data  # Zapobiega błędom uprawnień i problemom z tworzeniem plików jako root
+  register: wp_db_update
+  changed_when: "'Database updated successfully' in wp_db_update.stdout"
+  failed_when: wp_db_update.rc != 0 and 'Database already up to date' not in wp_db_update.stdout
+
+# KROK 4: Aktualizacja samego rdzenia (Core) WordPressa do najnowszej wersji
+- name: Zaktualizuj rdzen WordPressa
+  command: wp core update
+  args:
+    chdir: /var/www/html
+  become: yes
+  become_user: www-data
+  register: wp_core_update
+  changed_when: "'WordPress updated successfully' in wp_core_update.stdout"
+
+# KROK 5: Masowa aktualizacja wszystkich wtyczek (Plugins)
+- name: Zaktualizuj wszystkie zainstalowane wtyczki
+  command: wp plugin update --all
+  args:
+    chdir: /var/www/html
+  become: yes
+  become_user: www-data
+  register: wp_plugins_update
+  changed_when: "'Success: Updated' in wp_plugins_update.stdout"
+
+# KROK 6: Masowa aktualizacja wszystkich motywów (Themes)
+- name: Zaktualizuj wszystkie motywy
+  command: wp theme update --all
+  args:
+    chdir: /var/www/html
+  become: yes
+  become_user: www-data
+  register: wp_themes_update
+  changed_when: "'Success: Updated' in wp_themes_update.stdout"

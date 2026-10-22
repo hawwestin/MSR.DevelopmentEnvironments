@@ -14,6 +14,7 @@ ansible-playbook -i Ansible/lamp-wp/inventories/hosts.ini Ansible/lamp-wp/playbo
 ansible-playbook -i Ansible/lamp-wp/inventories/hosts.ini Ansible/lamp-wp/playbooks/03-database.yml --ask-vault-pass
 ansible-playbook -i Ansible/lamp-wp/inventories/hosts.ini Ansible/lamp-wp/playbooks/04-migrationweb.yml --ask-vault-pass -vvv
 ansible-playbook -i Ansible/lamp-wp/inventories/hosts.ini Ansible/lamp-wp/playbooks/04-migrationdb.yml -vvv --ask-vault-pass 
+
 ```
 
 ## Notes

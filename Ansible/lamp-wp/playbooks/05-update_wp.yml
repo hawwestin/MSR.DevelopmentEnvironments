@@ -1,0 +1,6 @@
+---
+- name: Automatyczna aktualizacja WordPressa za pomocą WP-CLI
+  hosts: web # Odnosi się do grupy [web] z Twojego pliku hosts.ini zawierającej 192.168.200.5
+  become: yes # WP-CLI wymaga odpowiednich uprawnień do zapisu w /var/www/html
+  roles:
+    - wp_cli_update
