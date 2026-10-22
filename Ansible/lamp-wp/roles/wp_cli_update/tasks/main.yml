@@ -28,12 +28,16 @@
   changed_when: "'upgraded' in wp_db_update.stdout | lower"
 
 - name: Update all WordPress plugins
-  command: wp plugin update --all
+  command: wp plugin update --all --exclude=contact-form-7
   args:
     chdir: "{{ web_root }}"
   become_user: www-data
   register: wp_plugins_update
   changed_when: wp_plugins_update.stdout is search('(?i)updated [1-9][0-9]* of')
+  # changed_when: "'Success: Updated' in wp_plugins_update.stdout"
+  failed_when: >
+    wp_plugins_update.rc != 0 and 
+    'Error: No plugins updated' not in wp_plugins_update.stderr
 
 - name: Update all WordPress themes
   command: wp theme update --all
