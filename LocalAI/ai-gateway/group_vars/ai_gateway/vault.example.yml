@@ -1,0 +1,12 @@
+vault_postgres_password: "REPLACE_WITH_LONG_RANDOM_PASSWORD"
+
+# URL-encode the password portion if it contains URL-special characters.
+vault_database_url: "postgresql://litellm:REPLACE_WITH_LONG_RANDOM_PASSWORD@postgres:5432/litellm"
+
+vault_litellm_master_key: "sk-REPLACE_WITH_LONG_RANDOM_MASTER_KEY"
+vault_litellm_salt_key: "REPLACE_WITH_LONG_RANDOM_SALT_KEEP_STABLE"
+
+vault_azure_api_key: "REPLACE_WITH_AZURE_KEY"
+vault_vllm_api_key: "REPLACE_WITH_VLLM_KEY"
+
+vault_GEMINI_API_KEY: "REPLACE_WITH_GEMINI_KEY"
