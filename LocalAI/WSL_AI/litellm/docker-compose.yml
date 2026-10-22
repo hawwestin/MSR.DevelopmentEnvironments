@@ -1,0 +1,61 @@
+services:
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    restart: unless-stopped
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OPENAI_API_BASE_URL=http://litellm:4000/v1
+      - OPENAI_API_KEY=sk-1234
+    ports:
+      - "127.0.0.1:3000:8080"
+    volumes:
+      - open-webui:/app/backend/data
+    depends_on:
+      ollama:
+        condition: service_healthy
+      litellm:
+        condition: service_started
+
+  litellm:
+    image: ghcr.io/berriai/litellm:main-latest
+    container_name: litellm
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:4000:4000"
+    volumes:
+      - ./config.yml:/app/config.yaml:ro
+    env_file:
+      - .env.local
+    command: [ "--config", "/app/config.yaml", "--port", "4000" ]
+    depends_on:
+      ollama:
+        condition: service_healthy
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    environment:
+      OLLAMA_MAX_LOADED_MODELS: "1"
+      OLLAMA_NUM_PARALLEL: "1"
+    volumes:
+      - ollama:/root/.ollama
+      - ../PicoModels/ModelFile:/ModelFile:ro
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+volumes:
+  open-webui:
+  ollama:
