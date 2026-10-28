@@ -1,9 +1,9 @@
 model_list:
   # Model chmurowy (Google Gemini)
-  - model_name: gemini-1.5-flash
-    litellm_params:
-      model: gemini/gemini-1.5-flash
-      api_key: "os.environ/GEMINI_API_KEY"
+  # - model_name: gemini-1.5-flash
+  #   litellm_params:
+  #     model: gemini/gemini-1.5-flash
+  #     api_key: "os.environ/GEMINI_API_KEY"
 
   # Twój lokalny model z limitami VRAM z Ollamy
   - model_name: local-qwen-2gb
@@ -12,7 +12,22 @@ model_list:
       api_base: "http://ollama:11434"
       # api_base: "http://host.docker.internal:11434" # for docker run 
 
+  - model_name: local-qwen2.5-0.5b
+    litellm_params:
+      model: ollama/qwen2.5:0.5b
+      api_base: "http://ollama:11434"
+
+  - model_name: local-qwen2.5-1.5b
+    litellm_params:
+      model: ollama/qwen2.5:1.5b
+      api_base: "http://ollama:11434"
+
+  - model_name: local-llama3.2-1b
+    litellm_params:
+      model: ollama/llama3.2:1b
+      api_base: "http://ollama:11434"
+
 # Ustawienia routera (opcjonalne, przydatne do testów fallback)
-router_settings:
-  fallback_models:
-    - gemini-1.5-flash: ["local-qwen-2gb"]
+# router_settings:
+#   fallback_models:
+#     - gemini-1.5-flash: ["local-qwen-2gb"]

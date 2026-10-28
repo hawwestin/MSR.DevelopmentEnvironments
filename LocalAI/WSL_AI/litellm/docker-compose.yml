@@ -3,6 +3,8 @@ services:
     image: ghcr.io/open-webui/open-webui:main
     container_name: open-webui
     restart: unless-stopped
+    env_file:
+      - .env.local
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
       - OPENAI_API_BASE_URL=http://litellm:4000/v1
@@ -43,6 +45,8 @@ services:
     image: postgres:16
     container_name: litellm-postgres
     restart: unless-stopped
+    env_file:
+      - .env.local
     environment:
       POSTGRES_DB: litellm
       POSTGRES_USER: litellm
