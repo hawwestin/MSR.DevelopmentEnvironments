@@ -19,6 +19,13 @@ ansible new -m ping
 ansible -a "hostname" new
 ```
 
+# use  ssh-agent
+```bash
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_rsa_windows
+ssh-add -l
+```
+
 # known hosts
 ```bash
 ssh-keyscan -H 192.168.100.14 >> ~/.ssh/known_hosts
