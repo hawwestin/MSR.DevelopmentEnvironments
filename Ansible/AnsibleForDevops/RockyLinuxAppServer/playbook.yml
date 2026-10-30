@@ -1,0 +1,77 @@
+---
+- hosts: app
+  become: true
+
+  vars:
+    node_apps_location: /usr/local/opt/node
+
+  pre_tasks:
+      - name: Ensure gnupg2 is installed for key imports
+        ansible.builtin.dnf:
+          name: gnupg2
+          state: present
+
+  tasks:
+    - name: Install EPEL repo.
+      ansible.builtin.dnf:
+        name: epel-release
+        state: present
+
+    - name: Import Remi GPG key.
+      ansible.builtin.rpm_key:
+        key: "https://rpms.remirepo.net/RPM-GPG-KEY-remi2024"
+        state: present
+
+    - name: Install Remi repo.
+      ansible.builtin.dnf:
+        name: "https://rpms.remirepo.net/enterprise/remi-release-10.rpm"
+        state: present
+
+    # Minimal LXC container images for Rocky Linux do not include the firewalld package by default 
+    - name: Ensure firewalld is stopped (since this is for testing).
+      ansible.builtin.service:
+        name: firewalld
+        state: stopped
+        enabled: false
+      ignore_errors: true
+
+    - name: Install Node.js and npm.
+      ansible.builtin.dnf:
+        name: npm
+        state: present
+        enablerepo: epel
+
+    - name: Install Forever (to run our Node.js app).
+      ansible.builtin.npm:
+        name: forever
+        global: yes
+        state: present
+
+    - name: Ensure Node.js app folder exists.
+      ansible.builtin.file:
+        path: "{{ node_apps_location }}"
+        state: directory
+
+    - name: Copy example Node.js app to server.
+      ansible.builtin.copy:
+        src: app
+        dest: "{{ node_apps_location }}"
+      notify: Restart Node.js app after changes
+
+    - name: Install app dependencies defined in package.json.
+      ansible.builtin.npm:
+        path: "{{ node_apps_location }}/app"
+
+    - name: Check list of running Node.js apps.
+      ansible.builtin.command: npx forever list
+      register: forever_list
+      changed_when: false
+
+    - name: Start example Node.js app.
+      ansible.builtin.command: "npx forever start {{ node_apps_location }}/app/app.js"
+      when: "forever_list.stdout.find(node_apps_location + '/app/app.js') == -1"
+
+  handlers:
+    - name: Restart Node.js app after changes
+      ansible.builtin.command: "npx forever restart {{ node_apps_location }}/app/app.js"
+      when: "forever_list.stdout.find(node_apps_location + '/app/app.js') != -1"

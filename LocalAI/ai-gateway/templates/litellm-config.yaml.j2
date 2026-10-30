@@ -1,0 +1,32 @@
+model_list:
+  # OpenAI-compatible inference endpoint served by vLLM on the VPS.
+  - model_name: vps-code
+    litellm_params:
+      model: hosted_vllm/{{ vllm_model_name }}
+      api_base: os.environ/VLLM_API_BASE
+      api_key: os.environ/VLLM_API_KEY
+
+        # Model chmurowy (Google Gemini)
+  - model_name: gemini-1.5-flash
+    litellm_params:
+      model: gemini/gemini-1.5-flash
+      api_key: "os.environ/GEMINI_API_KEY"
+
+  - model_name: gpt-4o-mini
+    litellm_params:
+      model: openai/gpt-4o-mini
+      api_key: os.environ/OPENAI_API_KEY
+
+
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/DATABASE_URL
+
+# Deliberately no cross-boundary fallback:
+# a "VPS only" request must never silently move to Cloud
+# Router settings (Optional, useful for testing fallback)
+router_settings:
+  fallback_models:
+    - gemini-1.5-flash: ["local-qwen-2gb"]  
+

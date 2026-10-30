@@ -1,3 +1,20 @@
+# Diagnostic
+**IMPORTANT:** Always set the ANSIBLE_CONFIG environment variable before running playbooks:
+This fix issue with paths to ansible roles.
+By default it looks for them under playbooks directory. 
+
+```bash
+source Ansible/lamp-wp/.env
+# or load content
+export ANSIBLE_CONFIG=$PWD/Ansible/lamp-wp/ansible.cfg
+export ANSIBLE_VAULT_PASSWORD_FILE=~/.ansible/Lamp-vault-password
+
+#test
+ansible -i Ansible/lamp-wp/inventories/hosts.ini all -m ping
+```
+
+
+# project map
 ansible/lamp-wp/
  ├── inventories/
  │    ├── hosts.ini
@@ -6,7 +23,7 @@ ansible/lamp-wp/
  │        └── all.yml
  ├── roles/
  │    ├── common/          # apt update, base packets, timezone, firewall
- │    ├── webserver/       # Apache, PHP 7.4.3, modules
+ │    ├── webserver/       # Apache, configurable PHP (default 8.4), modules
  │    ├── mysql/           # MySQL 8.0.41, user, db
  │    └── wordpress/       # install WP, perms, wp-config
  ├── playbooks/
@@ -20,45 +37,6 @@ ansible/lamp-wp/
       └── wordpress-6.9.4.tar.gz
 
 
+# web server data
 
-```bash
-wget https://wordpress.org/wordpress-6.9.4.tar.gz -O files/wordpress-6.9.4.tar.gz
-```
-
-Backup Wordpress > 04-migration.yml
-```bash
-rsync -avz root@vps:/var/www/html/ /var/www/html/
-
-```
-
-
-Restore Database  > 04-migration.yml
-```bash
-mysql -u root -p wordpress < backup.sql
-```
-
-Fix permissions  > 04-migration.yml
-```bash
-chown -R www-data:www-data /var/www/html
-find /var/www/html -type d -exec chmod 755 {} \;
-find /var/www/html -type f -exec chmod 644 {} \;
-
-```
-
-update url in database  > 04-migration.yml
-TODO add to Ansible
-```sql
-UPDATE wp_options SET option_value='http://192.168.200.5' WHERE option_name='siteurl';
-UPDATE wp_options SET option_value='http://192.168.200.5' WHERE option_name='home';
-
-```
-
-Things to check
- 1. Same PHP version
- 2. Same MySql version
- 3. Set permissions for www-data user/group
- 4. Set correct URL in database
- 5. check .htaccess files , backups often miss those 
- 6. Plugins and motives need to be in backup if were installed manually. 
-
-
+The deployment currently targets Ubuntu 22.04 and 24.04 and defaults to PHP 8.4 through the Ondrej PHP PPA. The host details below are a historical Ubuntu 20.04 / PHP 7.4 snapshot, not the current role configuration.

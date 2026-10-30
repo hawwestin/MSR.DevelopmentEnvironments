@@ -1,0 +1,16 @@
+gateway_dir: /srv/ai-gateway
+
+# Set this to a tested, pinned LiteLLM image tag or digest before deployment.
+litellm_image: ghcr.io/berriai/litellm:main-stable
+postgres_image: postgres:16-alpine
+
+# This must be the Azure OpenAI endpoint associated with your Foundry
+# deployment, not the Foundry portal URL.
+# azure_api_base: https://YOUR-RESOURCE.openai.azure.com/
+# azure_api_version: "2024-10-21"
+# azure_deployment_name: YOUR-DEPLOYMENT-NAME
+
+# The actual model name served by vLLM. Check /v1/models on the VPS.
+# dummy model cpu + igpu ram? 
+vllm_model_name: YOUR-SERVED-MODEL-NAME
+vllm_api_base: https://vllm.internal.example/v1

@@ -23,9 +23,34 @@ ansible -a "hostname" new
 ```bash
 ssh-keyscan -H 192.168.100.14 >> ~/.ssh/known_hosts
 ```
+# 
+```bash
+ssh-copy-id -i ~/.ssh/id_ansible.pub ansible_mgr@192.168.100.100
+ssh-copy-id -i ~/.ssh/id_rsa_windows.pub root@192.168.50.6
+```
 
 
 # host setup
 ```bash
 ansible new -m setup
+```
+
+## Proxmox plugin
+```bash
+pipx inject ansible proxmoxer requests
+pipx runpip ansible list
+
+ansible-doc -t inventory community.proxmox.proxmox
+
+ansible-galaxy collection install community.general
+ansible-galaxy collection install community.proxmox
+```
+Provision ansible user on proxmxo server/cluster using [ansibleUserProxmox](MSR.DevelopmentEnvironments/Ansible/snippets/ansibleUserProxmox.sh)
+Create private .env.proxmox file with Real secrets 
+```bash
+source Ansible/homelab/inventories/.env.proxmox
+ansible-inventory -i Ansible/homelab/inventories/proxmox.proxmox.yml --graph
+ansible-inventory -i Ansible/homelab/inventories/proxmox.proxmox.yml --list
+
+ansible -i Ansible/homelab/inventories/proxmox.proxmox.yml all -m ping
 ```

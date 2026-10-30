@@ -11,7 +11,7 @@
   #   update_cache: yes
 
 - name: Install base packages
-  ansible.builtin.raw: apt-get install -y curl unzip git software-properties-common rsync
+  ansible.builtin.raw: apt-get install -y curl unzip git software-properties-common rsync acl
   become: true
   # apt:
   #   name:
@@ -19,6 +19,7 @@
   #     - unzip
   #     - git
   #     - software-properties-common
+  #     - acl
   #   state: present
 
 - name: Set timezone
