@@ -1,0 +1,20 @@
+---
+- name: Configure NUT server on Malina
+  hosts: malina
+  become: true
+  gather_facts: true
+  roles:
+    - role: nut
+      vars:
+        nut_server: true
+        nut_mode: netserver
+
+- name: Configure NUT clients on Proxmox nodes
+  hosts: proxmox
+  become: true
+  gather_facts: true
+  roles:
+    - role: nut
+      vars:
+        nut_server: false
+        nut_mode: netclient

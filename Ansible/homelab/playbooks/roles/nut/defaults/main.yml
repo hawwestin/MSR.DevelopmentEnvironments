@@ -1,0 +1,21 @@
+---
+nut_server: false
+nut_mode: netclient
+
+nut_server_address: 192.168.50.20
+nut_server_port: 3493
+nut_ups_name: CBSups
+nut_ups_driver: usbhid-ups
+nut_ups_port: auto
+nut_ups_vendor_id: '0764'
+nut_ups_product_id: '0501'
+nut_ups_serial: '000000000000'
+nut_ups_description: CPS CP900EPFCLCD
+
+nut_server_packages:
+  - nut-server
+  - nut-client
+nut_client_packages:
+  - nut-client
+
+nut_monitor_service: nut-monitor

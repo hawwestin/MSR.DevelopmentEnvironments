@@ -1,0 +1,56 @@
+#!/bin/sh
+logger -t upssched-cmd "UPSNAME is $UPSNAME, NOTIFYTYPE is $NOTIFYTYPE"
+ case $1 in
+        online)
+            logger -t upssched-cmd "Power restored — cancelling earlyshutdown timer"
+            ;;
+       onbatt)
+          logger -t upssched-cmd "UPS running on battery"
+          ;;
+       earlyshutdown)
+          logger -t upssched-cmd "Checking battery runtime before shutdown"
+          RUNTIME=$(upsc "$UPSNAME" battery.runtime 2>/dev/null)
+          STATUS=$(upsc "$UPS" ups.status 2>/dev/null)
+            if [[ "$STATUS" == *"OB"* && "$RUNTIME" -lt 300 ]]; then
+                logger -t upssched-cmd "Runtime below 5 minutes — initiating shutdown"
+                /usr/sbin/upsmon -c fsd
+            else
+                logger -t upssched-cmd "Runtime sufficient — no shutdown"
+            fi        
+          /usr/sbin/upsmon -c fsd
+          ;;
+        commbad)
+            logger -t upssched-cmd "UPS communication lost"
+            ;;
+        commok)
+            logger -t upssched-cmd "UPS communication established"
+            ;;
+       shutdowncritical)
+          RUNTIME=$(upsc "$UPSNAME" battery.runtime 2>/dev/null)
+          STATUS=$(upsc "$UPSNAME" ups.status 2>/dev/null)
+          LOAD=$(upsc "$UPSNAME" ups.load)
+          logger -t nut-monitor "UPS $UPSNAME battery critical! Current UPS load: $LOAD%"
+            if [[ "$STATUS" == *"OB"* && "$RUNTIME" -lt 60 ]]; then
+                logger -t upssched-cmd "UPS on battery critical, forced shutdown!"
+                logger -t upssched-cmd "Runtime $RUNTIME below 1 minute — initiating shutdown"
+                /usr/sbin/upsmon -c fsd
+            else
+                logger -t upssched-cmd "Runtime $RUNTIME sufficient — no shutdown"
+            fi
+          /usr/sbin/upsmon -c fsd
+          ;;
+       upsgone)
+          logger -t upssched-cmd "UPS has been gone too long, can't reach"
+          ;;
+        powerdown)
+            logger -t upssched-cmd "Final shutdown initiated. UPS shutting down system"
+            # CEPH flags here            
+            /usr/bin/pvesh set /nodes/$(hostname) --shutdown
+            sleep 10    
+            /usr/sbin/upsmon -c fsd
+            
+            ;;
+       *)
+          logger -t upssched-cmd "Unrecognized command: $1"
+          ;;
+ esac

@@ -1,0 +1,119 @@
+---
+- name: Verify supported platform and NUT mode
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.os_family == 'Debian'
+      - nut_mode in ['netserver', 'netclient']
+      - (nut_server | bool) == (nut_mode == 'netserver')
+    fail_msg: >-
+      The NUT role currently supports Debian-family hosts and requires
+      nut_server to match nut_mode.
+
+- name: Check whether the NUT monitor unit is already installed
+  ansible.builtin.stat:
+    path: /lib/systemd/system/nut-monitor.service
+  register: nut_monitor_unit
+
+- name: Check whether the local NUT server unit is installed
+  ansible.builtin.stat:
+    path: /lib/systemd/system/nut-server.service
+  register: nut_local_server_unit
+  when: not nut_server | bool
+
+- name: Check whether the local NUT driver enumerator unit is installed
+  ansible.builtin.stat:
+    path: /lib/systemd/system/nut-driver-enumerator.service
+  register: nut_local_driver_unit
+  when: not nut_server | bool
+
+- name: Stop and disable an existing NUT monitor before package changes
+  ansible.builtin.service:
+    name: "{{ nut_monitor_service }}"
+    state: stopped
+    enabled: false
+  when: nut_monitor_unit.stat.exists
+
+- name: Stop and disable a local NUT server on clients
+  ansible.builtin.service:
+    name: nut-server
+    state: stopped
+    enabled: false
+  when:
+    - not nut_server | bool
+    - nut_local_server_unit.stat.exists
+
+- name: Stop and disable a local NUT driver on clients
+  ansible.builtin.service:
+    name: nut-driver-enumerator
+    state: stopped
+    enabled: false
+  when:
+    - not nut_server | bool
+    - nut_local_driver_unit.stat.exists
+
+- name: Install NUT packages
+  ansible.builtin.apt:
+    name: "{{ nut_server_packages if nut_server else nut_client_packages }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+    policy_rc_d: 101
+
+- name: Stop and disable NUT monitor
+  ansible.builtin.service:
+    name: "{{ nut_monitor_service }}"
+    state: stopped
+    enabled: false
+
+- name: Check whether the NUT driver enumerator unit is installed
+  ansible.builtin.stat:
+    path: /lib/systemd/system/nut-driver-enumerator.service
+  register: nut_driver_enumerator_unit
+  when: nut_server | bool
+
+- name: Configure NUT mode
+  ansible.builtin.template:
+    src: nut.conf.j2
+    dest: /etc/nut/nut.conf
+    owner: root
+    group: nut
+    mode: '0640'
+  notify: Restart NUT server
+
+- name: Configure the physical UPS driver
+  ansible.builtin.template:
+    src: ups.conf.j2
+    dest: /etc/nut/ups.conf
+    owner: root
+    group: nut
+    mode: '0640'
+  when: nut_server | bool
+  notify:
+    - Restart NUT server
+    - Restart NUT driver enumerator
+
+- name: Configure NUT server listeners
+  ansible.builtin.template:
+    src: upsd.conf.j2
+    dest: /etc/nut/upsd.conf
+    owner: root
+    group: nut
+    mode: '0640'
+  when: nut_server | bool
+  notify: Restart NUT server
+
+- name: Enable and start NUT driver enumerator when available
+  ansible.builtin.service:
+    name: nut-driver-enumerator
+    enabled: true
+    state: started
+  when:
+    - nut_server | bool
+    - nut_driver_enumerator_unit.stat.exists
+
+- name: Enable and start NUT server
+  ansible.builtin.service:
+    name: nut-server
+    enabled: true
+    state: started
+  when: nut_server | bool

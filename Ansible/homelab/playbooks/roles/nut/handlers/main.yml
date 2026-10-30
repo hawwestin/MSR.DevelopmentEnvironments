@@ -1,0 +1,14 @@
+---
+- name: Restart NUT server
+  ansible.builtin.service:
+    name: nut-server
+    state: restarted
+  when: nut_server | bool
+
+- name: Restart NUT driver enumerator
+  ansible.builtin.service:
+    name: nut-driver-enumerator
+    state: restarted
+  when:
+    - nut_server | bool
+    - nut_driver_enumerator_unit.stat.exists
