@@ -1,3 +1,5 @@
+maxretry = {{ nut_ups_maxretry }}
+
 [{{ nut_ups_name }}]
   driver = {{ nut_ups_driver }}
   port = {{ nut_ups_port }}
@@ -5,3 +7,9 @@
   productid = {{ nut_ups_product_id }}
   serial = {{ nut_ups_serial }}
   desc = {{ nut_ups_description }}
+  sdorder = {{ nut_ups_sdorder }}
+
+[qnapups]
+  driver = dummy-ups
+  port = {{ nut_ups_name }}@localhost
+  desc = QNAP UPS compatibility device

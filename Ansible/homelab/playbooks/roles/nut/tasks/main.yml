@@ -102,6 +102,17 @@
   when: nut_server | bool
   notify: Restart NUT server
 
+- name: Deploy vaulted NUT account file
+  ansible.builtin.copy:
+    src: upsd.users.vault
+    dest: /etc/nut/upsd.users
+    owner: root
+    group: nut
+    mode: '0640'
+    decrypt: true
+  when: nut_server | bool
+  notify: Restart NUT server
+
 - name: Enable and start NUT driver enumerator when available
   ansible.builtin.service:
     name: nut-driver-enumerator

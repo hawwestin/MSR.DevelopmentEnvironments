@@ -1,0 +1,102 @@
+---
+- name: Snapshot current NUT configuration
+  hosts: 'malina:proxmox'
+  become: true
+  gather_facts: false
+  vars:
+    nut_snapshot_root: "{{ lookup('env', 'HOME') }}/.local/share/msr/nut-snapshots"
+
+  tasks:
+    - name: Require a unique snapshot identifier
+      ansible.builtin.assert:
+        that:
+          - nut_snapshot_id is defined
+          - nut_snapshot_id | string | length > 0
+        fail_msg: "Pass a unique nut_snapshot_id, such as a timestamp."
+
+    - name: Create private snapshot root on the controller
+      ansible.builtin.file:
+        path: "{{ nut_snapshot_root }}/{{ nut_snapshot_id }}"
+        state: directory
+        mode: '0700'
+      delegate_to: localhost
+      become: false
+      run_once: true
+
+    - name: Create private directory for this host
+      ansible.builtin.file:
+        path: "{{ nut_snapshot_root }}/{{ nut_snapshot_id }}/{{ inventory_hostname }}"
+        state: directory
+        mode: '0700'
+      delegate_to: localhost
+      become: false
+
+    - name: Find current NUT configuration files
+      ansible.builtin.find:
+        paths: /etc/nut
+        file_type: file
+        recurse: false
+      register: nut_config_files
+
+    - name: Fetch current NUT configuration files
+      ansible.builtin.fetch:
+        src: "{{ item.path }}"
+        dest: "{{ nut_snapshot_root }}/{{ nut_snapshot_id }}/{{ inventory_hostname }}/{{ item.path | basename }}"
+        flat: true
+        validate_checksum: true
+      loop: "{{ nut_config_files.files }}"
+      register: nut_fetched_files
+      no_log: true
+
+    - name: Read custom NUT command script paths
+      ansible.builtin.shell:
+        cmd: "awk '$1 == \"CMDSCRIPT\" { print $2 }' /etc/nut/upssched.conf"
+      register: nut_script_paths
+      changed_when: false
+      failed_when: false
+
+    - name: Check whether referenced NUT scripts exist
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop: "{{ nut_script_paths.stdout_lines }}"
+      register: nut_script_stats
+
+    - name: Create private script directory for this host
+      ansible.builtin.file:
+        path: "{{ nut_snapshot_root }}/{{ nut_snapshot_id }}/{{ inventory_hostname }}/scripts"
+        state: directory
+        mode: '0700'
+      delegate_to: localhost
+      become: false
+
+    - name: Fetch referenced NUT command scripts
+      ansible.builtin.fetch:
+        src: "{{ item.item }}"
+        dest: "{{ nut_snapshot_root }}/{{ nut_snapshot_id }}/{{ inventory_hostname }}/scripts/{{ item.item | basename }}"
+        flat: true
+        validate_checksum: true
+      loop: "{{ nut_script_stats.results }}"
+      when: item.stat.exists
+      register: nut_fetched_scripts
+      no_log: true
+
+    - name: Restrict fetched file permissions
+      ansible.builtin.file:
+        path: "{{ item.dest }}"
+        state: file
+        mode: '0600'
+      loop: "{{ nut_fetched_files.results }}"
+      delegate_to: localhost
+      become: false
+      no_log: true
+
+    - name: Restrict fetched script permissions
+      ansible.builtin.file:
+        path: "{{ item.dest }}"
+        state: file
+        mode: '0600'
+      loop: "{{ nut_fetched_scripts.results }}"
+      when: item.dest is defined
+      delegate_to: localhost
+      become: false
+      no_log: true
