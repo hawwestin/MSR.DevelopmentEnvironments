@@ -1,0 +1,49 @@
+---
+- name: Deploy internal AI gateway
+  hosts: ai_gateway
+  become: true
+
+  pre_tasks:
+    - name: Verify Docker Compose is installed
+      ansible.builtin.command: docker compose version
+      changed_when: false
+
+  tasks:
+    - name: Create gateway directory
+      ansible.builtin.file:
+        path: "{{ gateway_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0700"
+
+    - name: Render Compose file
+      ansible.builtin.template:
+        src: templates/compose.yaml.j2
+        dest: "{{ gateway_dir }}/compose.yaml"
+        owner: root
+        group: root
+        mode: "0600"
+
+    - name: Render LiteLLM model configuration
+      ansible.builtin.template:
+        src: templates/litellm-config.yaml.j2
+        dest: "{{ gateway_dir }}/litellm-config.yaml"
+        owner: root
+        group: root
+        mode: "0600"
+
+    - name: Render gateway secrets and environment
+      ansible.builtin.template:
+        src: templates/gateway.env.j2
+        dest: "{{ gateway_dir }}/.env"
+        owner: root
+        group: root
+        mode: "0600"
+      no_log: true
+
+    - name: Start or update gateway
+      community.docker.docker_compose_v2:
+        project_src: "{{ gateway_dir }}"
+        state: present
+      no_log: true

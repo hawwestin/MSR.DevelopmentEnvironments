@@ -1,18 +1,54 @@
 ---
+- name: Validate Ubuntu release for PHP packages
+  ansible.builtin.raw: |
+    set -eu
+    . /etc/os-release
+    case "${VERSION_ID:-}" in
+      22.04|24.04) ;;
+      *)
+        echo "Ubuntu ${VERSION_ID:-unknown} is unsupported for this PHP deployment; upgrade to Ubuntu 22.04 or 24.04 first." >&2
+        exit 1
+        ;;
+    esac
+  changed_when: false
+
 - name: Install Apache
   raw: apt-get install -y apache2
   become: true
   # apt:
   #   name: apache2
   #   state: present
+  vars:
+    php_Extensions:
+      - cli
+      - common
+      - mysql
+      - xml
+      - curl
+      - mbstring
 
 - name: Enable Apache modules
   apache2_module:
     name: rewrite
     state: present
+  notify: Restart Apache
+
+# require for php 8+
+- name: Add Ondrej PHP PPA
+  ansible.builtin.raw: |
+    set -e
+    apt-get install -y software-properties-common
+    if ! grep -RqsE 'ppa\.launchpad(net|content)\.net/ondrej/php' /etc/apt/sources.list.d; then
+      add-apt-repository -y ppa:ondrej/php
+      echo 'Added Ondrej PHP PPA'
+    fi
+    apt-get update
+  register: php_ppa_setup
+  changed_when: "'Added Ondrej PHP PPA' in php_ppa_setup.stdout"
+  become: true
 
 - name: Install PHP {{ php_version }} + modules
-  raw: apt-get install -y php{{ php_version }} php{{ php_version }}-mysql php{{ php_version }}-xml php{{ php_version }}-gd php{{ php_version }}-curl php{{ php_version }}-mbstring php{{ php_version }}-zip
+  raw: apt-get install -y php{{ php_version }} php{{ php_version }}-mysql php{{ php_version }}-xml php{{ php_version }}-gd php{{ php_version }}-curl php{{ php_version }}-mbstring php{{ php_version }}-zip php{{ php_version }}-intl libapache2-mod-php{{ php_version }}
   become: true
   #
   # apt:
@@ -24,9 +60,44 @@
   #     - "php{{ php_version }}-curl"
   #     - "php{{ php_version }}-mbstring"
   #     - "php{{ php_version }}-zip"
+  #     - "php{{ php_version }}-intl"
+  #     - "libapache2-mod-php{{ php_version }}"
   #   state: present
 
-- name: Restart Apache
-  service:
-    name: apache2
-    state: restarted
+- name: Find enabled Apache PHP modules
+  ansible.builtin.find:
+    paths: /etc/apache2/mods-enabled
+    patterns: 'php*.load'
+    file_type: any
+  register: enabled_php_modules
+
+- name: Disable conflicting Apache PHP modules
+  apache2_module:
+    name: "{{ item.path | basename | regex_replace('\\.load$', '') }}"
+    state: absent
+  loop: "{{ enabled_php_modules.files }}"
+  when: (item.path | basename) != ('php' ~ php_version ~ '.load')
+  notify: Restart Apache
+
+- name: Enable selected Apache PHP module
+  apache2_module:
+    name: "php{{ php_version }}"
+    state: present
+  notify: Restart Apache
+
+- name: Check selected PHP CLI alternative
+  ansible.builtin.command: update-alternatives --query php
+  register: php_cli_alternative
+  changed_when: false
+  failed_when: false
+  become: true
+
+- name: Select PHP {{ php_version }} for CLI
+  ansible.builtin.command: "update-alternatives --set php /usr/bin/php{{ php_version }}"
+  when: "('Value: /usr/bin/php' ~ php_version) not in php_cli_alternative.stdout"
+  become: true
+
+# - name: Restart Apache
+#   service:
+#     name: apache2
+#     state: restarted

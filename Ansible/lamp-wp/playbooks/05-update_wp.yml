@@ -1,0 +1,5 @@
+---
+- name: Update WordPress with WP-CLI
+  hosts: web
+  roles:
+    - wp_cli_update

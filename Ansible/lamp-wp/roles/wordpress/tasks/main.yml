@@ -1,7 +1,7 @@
 ---
 - name: Remove default index.html
   file:
-    path: {{ web_root }}/index.html
+    path: "{{ web_root }}/index.html"
     state: absent
 
 - name: Copy Wordress archive
@@ -9,6 +9,7 @@
     src: files/wordpress-{{ wp_version }}.tar.gz
     dest: /tmp/wordpress-{{ wp_version }}.tar.gz
 
+# TODO test this
 # - name: Download WordPress
 #   get_url:
 #     url: https://wordpress.org/wordpress-{{ wp_version }}.tar.gz

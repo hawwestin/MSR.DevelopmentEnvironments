@@ -1,0 +1,54 @@
+services:
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "127.0.0.1:3000:8080"
+    volumes:
+      - open-webui:/app/backend/data
+    depends_on:
+      litellm:
+        condition: service_healthy
+
+  postgres:
+    image: {{ postgres_image }}
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: litellm
+      POSTGRES_DB: litellm
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U litellm -d litellm"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - backend
+
+  litellm:
+    image: {{ litellm_image }}
+    restart: unless-stopped
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+    env_file:
+      - .env
+    volumes:
+      - ./litellm-config.yaml:/app/config.yaml:ro
+    ports:
+      - "127.0.0.1:4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - backend
+
+networks:
+  backend:
+
+volumes:
+  postgres_data:
+  open-webui:

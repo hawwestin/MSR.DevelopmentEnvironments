@@ -1,0 +1,62 @@
+---
+- hosts: web
+  become: true
+  tasks:
+
+  # make this more idempotent by checking if the file exists before trying to remove it
+  # make this faster by using rsync or synchronize instead of copy
+  # - name: Copy WordPress files
+  #   copy:
+  #     src: /mnt/BlogBackups/Restore/html_2026_05_01/
+  #     dest: /var/www/html/
+  #     owner: www-data
+  #     group: www-data
+  #     mode: '0755'
+  #     remote_src: yes
+
+  # - name: Sync WordPress files
+  #   synchronize:
+  #     src: "/mnt/BlogBackups/Restore/html_2026_05_01/"
+  #     dest: "/var/www/html/"
+  #     recursive: yes
+  #     delete: no
+  #   delegate_to: "{{ inventory_hostname }}"
+
+  - name: Sync WordPress files
+    ansible.builtin.command:
+      cmd: rsync -a --delete /mnt/BlogBackups/Restore/html/. /var/www/html/
+    async: 3600
+    poll: 10
+
+  - name: Remove default index.html
+    file:
+      path: /var/www/html/index.html
+      state: absent
+
+  - name: Fix permissions
+    file:
+      path: /var/www/html
+      owner: www-data
+      group: www-data
+      recurse: yes
+
+  - name: Add WP_ENVIRONMENT_TYPE to wp-config.php
+    lineinfile:
+      path: /var/www/html/wp-config.php
+      line: "define( 'WP_ENVIRONMENT_TYPE', 'local' );"
+      insertbefore: "/\\* That's all, stop editing! Happy blogging. \\*/"
+
+  - name: Add JETPACK_DEV_DEBUG to wp-config.php
+    lineinfile:
+      path: /var/www/html/wp-config.php
+      line: "define( 'JETPACK_DEV_DEBUG', true );"
+      insertbefore: "/\\* That's all, stop editing! Happy blogging. \\*/"
+
+  # replace the following lines in wp-config.php define('FS_METHOD', 'ssh2'); to define('FS_METHOD', 'direct');
+  - name: Replace FS_METHOD in wp-config-db.php
+    replace:
+      path: /var/www/html/wp-config-db.php
+      regexp: "define\\('FS_METHOD', 'ssh2'\\);"
+      replace: "define('FS_METHOD', 'direct');"
+
+    

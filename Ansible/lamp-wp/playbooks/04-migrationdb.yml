@@ -1,47 +1,6 @@
 ---
-- hosts: web
-  become: yes
-  tasks:
-
-  # make this more idempotent by checking if the file exists before trying to remove it
-  # make this faster by using rsync or synchronize instead of copy
-  # - name: Copy WordPress files
-  #   copy:
-  #     src: /mnt/BlogBackups/Restore/html_2026_05_01/
-  #     dest: /var/www/html/
-  #     owner: www-data
-  #     group: www-data
-  #     mode: '0755'
-  #     remote_src: yes
-
-  # - name: Sync WordPress files
-  #   synchronize:
-  #     src: "/mnt/BlogBackups/Restore/html_2026_05_01/"
-  #     dest: "/var/www/html/"
-  #     recursive: yes
-  #     delete: no
-  #   delegate_to: "{{ inventory_hostname }}"
-
-  - name: Sync WordPress files
-    ansible.builtin.command:
-      cmd: rsync -a --delete /mnt/BlogBackups/Restore/html_2026_05_01/ /var/www/html/
-    async: 3600
-    poll: 10
-
-  - name: Remove default index.html
-    file:
-      path: /var/www/html/index.html
-      state: absent
-
-  - name: Fix permissions
-    file:
-      path: /var/www/html
-      owner: www-data
-      group: www-data
-      recurse: yes
-
 - hosts: db
-  become: yes
+  become: true
   vars_files:
     - ../vault/secrets.yml
   tasks:
@@ -134,6 +93,19 @@
       msg: "wp-config-db.php is missing from /var/www/html and WordPress cannot connect to the DB without it."
     when: not wp_config_db_stat.stat.exists
 
+  - name: Replace FS_METHOD in wp-config-db.php
+    replace:
+      path: /var/www/html/wp-config-db.php
+      regexp: "define\\('FS_METHOD', 'ssh2'\\);"
+      replace: "define('FS_METHOD', 'direct');"
+
+  #  Remove commented duplicate DB_NAME, DB_USER, DB_PASSWORD, DB_HOST definitions from wp-config.php if they exist
+  - name: Remove commented duplicates DB constants from wp-config-db.php
+    lineinfile:
+      path: /var/www/html/wp-config-db.php
+      regexp: '^//.*?(DB_NAME|DB_USER|DB_PASSWORD|DB_HOST).*'
+      state: absent
+
   - name: Read WordPress DB config from wp-config-db.php
     shell: |
       python3 - <<'PY'
@@ -162,11 +134,16 @@
   - name: Validate wp-config-db.php values against vault
     fail:
       msg: "DB config in wp-config-db.php does not match vault values. Check vault and wp-config-db.php for mismatched credentials."
-    when: wp_config_db.DB_NAME != mysql_wp_db or wp_config_db.DB_USER != mysql_wp_user or wp_config_db.DB_PASSWORD != mysql_wp_password
+    when: wp_config_db.DB_NAME != mysql_wp_db or wp_config_db.DB_USER != mysql_wp_user 
 
-  - name: Debug effective WP DB config
-    debug:
-      var: wp_config_db
+  - name: Validate wp-config-db.php MySQL Password against vault
+    fail:
+      msg: "DB config in wp-config-db.php does not match vault values. Check vault and wp-config-db.php for mismatched credentials."
+    when: wp_config_db.DB_PASSWORD != mysql_wp_password
+
+  # - name: Debug effective WP DB config
+  #   debug:
+  #     var: wp_config_db
 
   - name: Test DB connection using WP config values
     shell: |
@@ -182,13 +159,13 @@
   - name: Ensure WP constants for siteurl/home
     lineinfile:
       path: /var/www/html/wp-config.php
-      insertafter: "<?php"
+      insertbefore: "/\\* That's all, stop editing! Happy blogging. \\*/"
       line: "{{ item }}"
       state: present
     loop:
       - "define('WP_HOME','http://192.168.200.5');"
       - "define('WP_SITEURL','http://192.168.200.5');"
-    become: yes
+    become: true
 
   - name: Update siteurl and home in wp_options
     community.mysql.mysql_query:
@@ -203,4 +180,4 @@
   - name: Restart Apache
     service:
       name: apache2
-      state: restartedexit
+      state: restarted

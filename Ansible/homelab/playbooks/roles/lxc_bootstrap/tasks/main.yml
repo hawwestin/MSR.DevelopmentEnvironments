@@ -1,0 +1,58 @@
+---
+- name: Ensure required variables are defined
+  ansible.builtin.assert:
+    that:
+      - lxc_vmid | length > 0
+      - lxc_ansible_pub_key | length > 0
+    fail_msg: "Both 'lxc_vmid' and 'lxc_ansible_pub_key' must be provided."
+
+- name: Test connectivity to the LXC container
+  ansible.builtin.command: "pct exec {{ lxc_vmid }} -- echo 'LXC container is reachable'"
+  register: connectivity_test
+  failed_when:
+    - connectivity_test.rc != 0
+    - "'LXC container is reachable' not in connectivity_test.stdout"
+  changed_when: false
+
+- name: Install openssh-server via pct
+  ansible.builtin.command: "pct exec {{ lxc_vmid }} -- dnf install -y openssh-server"
+  register: ssh_install
+  changed_when: "'Nothing to do' not in ssh_install.stdout"
+
+- name: Generate SSH host keys and enable sshd service
+  ansible.builtin.command: "pct exec {{ lxc_vmid }} -- bash -c 'ssh-keygen -A && systemctl enable --now sshd'"
+  register: ssh_keys
+  changed_when: false
+
+- name: Create ansible management user
+  ansible.builtin.command: "pct exec {{ lxc_vmid }} -- useradd -m -s /bin/bash {{ lxc_ansible_user }}"
+  register: user_create
+  failed_when:
+    - user_create.rc != 0
+    - "'already exists' not in user_create.stderr"
+  changed_when: user_create.rc == 0
+
+- name: Configure passwordless sudo for the ansible user
+  ansible.builtin.command: >
+    pct exec {{ lxc_vmid }} -- bash -c
+    'echo "{{ lxc_ansible_user }} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/{{ lxc_ansible_user }} &&
+    chmod 0440 /etc/sudoers.d/{{ lxc_ansible_user }}'
+  changed_when: false
+
+- name: Inject SSH public key for the ansible user
+  ansible.builtin.command: >
+    pct exec {{ lxc_vmid }} -- bash -c
+    'mkdir -p /home/{{ lxc_ansible_user }}/.ssh &&
+    echo "{{ lxc_ansible_pub_key }}" > /home/{{ lxc_ansible_user }}/.ssh/authorized_keys &&
+    chown -R {{ lxc_ansible_user }}:{{ lxc_ansible_user }} /home/{{ lxc_ansible_user }}/.ssh &&
+    chmod 700 /home/{{ lxc_ansible_user }}/.ssh &&
+    chmod 600 /home/{{ lxc_ansible_user }}/.ssh/authorized_keys'
+  changed_when: false
+
+- name: Disable password authentication in SSH
+  ansible.builtin.command: >
+    pct exec {{ lxc_vmid }} -- bash -c
+    'sed -i "s/^#*PasswordAuthentication.*/PasswordAuthentication no/" /etc/ssh/sshd_config &&
+    rm -f /etc/ssh/sshd_config.d/*.conf &&
+    systemctl restart sshd'
+  changed_when: false

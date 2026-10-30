@@ -1,0 +1,23 @@
+---
+# Proxmox dynamic inventory
+plugin: community.proxmox.proxmox
+validate_certs: false
+want_facts: true
+
+# Group containers dynamically based on Proxmox tags
+keyed_groups:
+  - key: proxmox_tags_parsed
+    separator: "_"
+    prefix: "proxmox_tag"
+
+compose:
+  # Parse static IP address from LXC network config 'proxmox_net0'.
+  # If DHCP is used, it falls back to the container name (relies on pfSense DNS resolution).
+  ansible_host: >-
+    proxmox_net0 | default('') | regex_replace('^.*ip=([0-9\.]+)/.*$', '\1') if ('ip=' in proxmox_net0 | default('') and 'dhcp' not in proxmox_net0 | default('')) else proxmox_name
+
+  # Automatically assign the ansible_mgr user for LXC containers
+  ansible_user: "'ansible_mgr'"
+
+  # Path to the SSH private key
+  ansible_ssh_private_key_file: "'~/.ssh/id_ansible'"
