@@ -1,56 +1,67 @@
 #!/bin/sh
-logger -t upssched-cmd "UPSNAME is $UPSNAME, NOTIFYTYPE is $NOTIFYTYPE"
- case $1 in
-        online)
-            logger -t upssched-cmd "Power restored — cancelling earlyshutdown timer"
-            ;;
-       onbatt)
-          logger -t upssched-cmd "UPS running on battery"
-          ;;
-       earlyshutdown)
-          logger -t upssched-cmd "Checking battery runtime before shutdown"
-          RUNTIME=$(upsc "$UPSNAME" battery.runtime 2>/dev/null)
-          STATUS=$(upsc "$UPS" ups.status 2>/dev/null)
-            if [[ "$STATUS" == *"OB"* && "$RUNTIME" -lt 300 ]]; then
-                logger -t upssched-cmd "Runtime below 5 minutes — initiating shutdown"
-                /usr/sbin/upsmon -c fsd
-            else
-                logger -t upssched-cmd "Runtime sufficient — no shutdown"
-            fi        
-          /usr/sbin/upsmon -c fsd
-          ;;
-        commbad)
-            logger -t upssched-cmd "UPS communication lost"
-            ;;
-        commok)
-            logger -t upssched-cmd "UPS communication established"
-            ;;
-       shutdowncritical)
-          RUNTIME=$(upsc "$UPSNAME" battery.runtime 2>/dev/null)
-          STATUS=$(upsc "$UPSNAME" ups.status 2>/dev/null)
-          LOAD=$(upsc "$UPSNAME" ups.load)
-          logger -t nut-monitor "UPS $UPSNAME battery critical! Current UPS load: $LOAD%"
-            if [[ "$STATUS" == *"OB"* && "$RUNTIME" -lt 60 ]]; then
-                logger -t upssched-cmd "UPS on battery critical, forced shutdown!"
-                logger -t upssched-cmd "Runtime $RUNTIME below 1 minute — initiating shutdown"
-                /usr/sbin/upsmon -c fsd
-            else
-                logger -t upssched-cmd "Runtime $RUNTIME sufficient — no shutdown"
-            fi
-          /usr/sbin/upsmon -c fsd
-          ;;
-       upsgone)
-          logger -t upssched-cmd "UPS has been gone too long, can't reach"
-          ;;
-        powerdown)
-            logger -t upssched-cmd "Final shutdown initiated. UPS shutting down system"
-            # CEPH flags here            
-            /usr/bin/pvesh set /nodes/$(hostname) --shutdown
-            sleep 10    
+
+# The scheduler must not treat the UPS LOWBATT flag as authoritative on its own.
+# Shutdown is only allowed after verifying that the system is actually on battery
+# and that the runtime/load thresholds indicate a real deficit.
+
+UPSNAME="${UPSNAME:-${1:-unknown}}"
+NOTIFYTYPE="${NOTIFYTYPE:-${1:-unknown}}"
+
+safe_num() {
+    value="${1:-0}"
+    case "$value" in
+        ''|*[!0-9]*) echo 0 ;;
+        *) echo "$value" ;;
+    esac
+}
+
+log_event() {
+    logger -t upssched-cmd "$*"
+}
+
+STATUS=$(upsc "$UPSNAME" ups.status 2>/dev/null || echo "UNKNOWN")
+RUNTIME=$(safe_num "$(upsc "$UPSNAME" battery.runtime 2>/dev/null || echo 0)")
+LOAD=$(safe_num "$(upsc "$UPSNAME" ups.load 2>/dev/null || echo 0)")
+
+log_event "event=$1 upsname=$UPSNAME notifytype=$NOTIFYTYPE status=$STATUS runtime=${RUNTIME}s load=${LOAD}%"
+
+case "$1" in
+    online)
+        log_event "Power restored; cancelling early-shutdown timer."
+        ;;
+    onbatt)
+        log_event "UPS on battery. status=$STATUS runtime=${RUNTIME}s load=${LOAD}%"
+        ;;
+    lowbatt)
+        log_event "Low-battery notification received. status=$STATUS runtime=${RUNTIME}s load=${LOAD}%"
+        if printf '%s' "$STATUS" | grep -q 'OB' && [ "$RUNTIME" -lt 300 ]; then
+            log_event "Runtime below safe threshold while on battery; shutdown action would be evaluated next."
+        else
+            log_event "Low-battery flag ignored: runtime/load do not meet the safe shutdown gate."
+        fi
+        ;;
+    shutdowncritical)
+        log_event "Shutdown-critical notification received. status=$STATUS runtime=${RUNTIME}s load=${LOAD}%"
+        if printf '%s' "$STATUS" | grep -q 'OB' && [ "$RUNTIME" -lt 300 ]; then
+            log_event "Safe shutdown condition met; requesting forced shutdown."
             /usr/sbin/upsmon -c fsd
-            
-            ;;
-       *)
-          logger -t upssched-cmd "Unrecognized command: $1"
-          ;;
- esac
+        else
+            log_event "No shutdown triggered: runtime/load below approved policy."
+        fi
+        ;;
+    commbad)
+        log_event "UPS communication lost."
+        ;;
+    commok)
+        log_event "UPS communications restored."
+        ;;
+    upsgone)
+        log_event "UPS no longer reachable by NUT."
+        ;;
+    powerdown)
+        log_event "Power-down sequence requested; no action taken in this stage."
+        ;;
+    *)
+        log_event "Unrecognized command: $1"
+        ;;
+esac

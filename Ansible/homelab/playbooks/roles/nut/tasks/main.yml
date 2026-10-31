@@ -102,6 +102,22 @@
   when: nut_server | bool
   notify: Restart NUT server
 
+- name: Configure NUT scheduler hooks
+  ansible.builtin.template:
+    src: upssched.conf.j2
+    dest: /etc/nut/upssched.conf
+    owner: root
+    group: nut
+    mode: '0640'
+
+- name: Deploy NUT scheduler callback
+  ansible.builtin.template:
+    src: upssched-cmd
+    dest: /etc/nut/upssched-cmd
+    owner: root
+    group: nut
+    mode: '0750'
+
 - name: Deploy vaulted NUT account file
   ansible.builtin.copy:
     src: upsd.users.vault

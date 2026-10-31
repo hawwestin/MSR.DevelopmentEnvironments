@@ -14,6 +14,13 @@ nut_ups_description: CPS CP900EPFCLCD
 nut_ups_maxretry: 3
 nut_ups_sdorder: -1
 
+nut_upssched_pipe: /etc/nut/upssched.pipe
+nut_upssched_lock: /etc/nut/upssched.lock
+nut_upssched_cmd: /etc/nut/upssched-cmd
+nut_upssched_onbatt_timer_seconds: 30
+nut_upssched_shutdown_runtime_seconds: 300
+nut_upssched_shutdown_load_percent: 70
+
 nut_server_packages:
   - nut-server
   - nut-client

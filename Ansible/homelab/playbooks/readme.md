@@ -30,4 +30,7 @@ Other plays
 ```bash
 ansible-playbook Ansible/homelab/playbooks/ha_otbr.yml --syntax-check
 ansible-playbook Ansible/homelab/playbooks/docker_install.yml --syntax-check
+
+
+ansible-playbook -i Ansible/homelab/inventories/hosts.ini Ansible/homelab/playbooks/nut.yml --limit opti3040 --check
 ```
