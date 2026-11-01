@@ -21,3 +21,5 @@ HomeLab pc/servers verious in use and form. In 2026 There is;
 This repo is my mess of learning new stuff that I found interesting to learn or at leass get a grasp of concept. 
 
 My commercial expirience is a factor in this journey. 
+
+One of the main purpose is to have some kind of backup in case any of homelab hosts dies and I need to reconfigure those. Manual things are beeing lost over years of thinkering around boxes. Today I'm mature enough to follow practices that are slower than just slamming shell snippets via ssh but in long run more stable. 
