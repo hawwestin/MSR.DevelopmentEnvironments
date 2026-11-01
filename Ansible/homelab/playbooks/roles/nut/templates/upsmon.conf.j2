@@ -116,7 +116,7 @@ RUN_AS_USER root
 # MONITOR su700@server.example.com 1 upsmon secretpass secondary
 # MONITOR myups@localhost 1 upsmon pass primary	# (or secondary)
 
-MONITOR {{ nut_ups_name }}@{{ nut_server_address }} {{ nut_monitor_minsupplies | default(1) }} {{ nut_monitor_user }} {{ vault_nut_monitor_password }} {{ nut_monitor_role }}
+MONITOR {{ nut_ups_name }}@{{ nut_server_address }} {{ nut_monitor_power_value }} {{ nut_monitor_user }} {{ vault_nut_monitor_password }} {{ nut_monitor_role }}
 
 # --------------------------------------------------------------------------
 # MINSUPPLIES <num>
@@ -134,7 +134,7 @@ MONITOR {{ nut_ups_name }}@{{ nut_server_address }} {{ nut_monitor_minsupplies |
 # for this to make sense!  See big-servers.txt in the docs subdirectory
 # for more information and ideas on how to use this feature.
 
-MINSUPPLIES 1
+MINSUPPLIES {{ nut_monitor_minsupplies }}
 
 # --------------------------------------------------------------------------
 # SHUTDOWNCMD "<command>"
@@ -178,6 +178,14 @@ SHUTDOWNCMD {{ nut_monitor_shutdowncmd | to_json }}
 # Example:
 # NOTIFYCMD /bin/notifyme
 NOTIFYCMD {{ nut_monitor_notifycmd }}
+
+NOTIFYFLAG ONLINE SYSLOG+EXEC
+NOTIFYFLAG ONBATT SYSLOG+EXEC
+NOTIFYFLAG LOWBATT SYSLOG+EXEC
+NOTIFYFLAG COMMBAD SYSLOG+EXEC
+NOTIFYFLAG COMMOK SYSLOG+EXEC
+NOTIFYFLAG NOCOMM SYSLOG+EXEC
+NOTIFYFLAG SHUTDOWN SYSLOG+EXEC
 
 # --------------------------------------------------------------------------
 # POLLFREQ <n>

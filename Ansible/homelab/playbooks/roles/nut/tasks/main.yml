@@ -110,6 +110,14 @@
     group: nut
     mode: '0640'
 
+- name: Deploy NUT monitor configuration
+  ansible.builtin.template:
+    src: upsmon.conf.j2
+    dest: /etc/nut/upsmon.conf
+    owner: root
+    group: nut
+    mode: '0640'
+
 - name: Deploy NUT scheduler callback
   ansible.builtin.template:
     src: upssched-cmd
@@ -118,14 +126,13 @@
     group: nut
     mode: '0750'
 
-- name: Deploy vaulted NUT account file
-  ansible.builtin.copy:
-    src: upsd.users.vault
+- name: Deploy template NUT account file
+  ansible.builtin.template:
+    src: upsd.users.j2
     dest: /etc/nut/upsd.users
     owner: root
     group: nut
     mode: '0640'
-    decrypt: true
   when: nut_server | bool
   notify: Restart NUT server
 

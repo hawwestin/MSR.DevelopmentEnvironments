@@ -1,0 +1,3 @@
+nut_monitor_password: {{ vault_nut_monitor_password }}
+nut_admin_password: {{ vault_nut_admin_password }}
+nut_qnap_admin_password: {{ vault_nut_qnap_admin_password }}

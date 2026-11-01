@@ -82,9 +82,9 @@
 
 [upsmon]
     password = {{ vault_nut_monitor_password }}
-    upsmon secondary
+    upsmon {{ nut_monitor_role }}
 
 # Qnap UPS compatibility user- hardcoded password for QNAP compatibility
 [admin]
-    password = 123456
+    password = {{ vault_nut_qnap_admin_password }}
     upsmon secondary

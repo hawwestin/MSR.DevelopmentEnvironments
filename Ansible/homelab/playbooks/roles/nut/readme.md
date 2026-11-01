@@ -21,3 +21,20 @@ NUT can do more automations in the future. Today I just don't want to damage any
 # TODO
 - Proxmox Cluster HA management
 - Ceph converged clsuter management
+
+## Role Configuration
+The role renders `nut.conf`, `upsmon.conf`, `upssched.conf`, and `upssched-cmd` on server and client hosts. The server additionally receives `ups.conf`, `upsd.conf`, and `upsd.users`. Passwords used by these templates belong in the inventory Ansible Vault file at `inventories/group_vars/all/vault.yml`; do not commit plaintext credentials.
+
+Required Vault variables are `vault_nut_monitor_password`, `vault_nut_admin_password`, and `vault_nut_qnap_admin_password`. The QNAP `[admin]` compatibility account is retained, but its password is supplied through Vault.
+
+The role currently stops and disables `nut-monitor`. Do not enable it or trigger the callback's forced-shutdown path until the Proxmox HA and Ceph shutdown coordination described above has been designed, tested safely, and explicitly approved. Proxmox/cluster playbooks are user-run only; an AI agent must not execute them.
+
+For a Proxmox check-mode review, start `ssh-agent`, add the passphrase-protected key, then run this from the repository root:
+```bash
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_rsa_windows
+export ANSIBLE_CONFIG="$PWD/Ansible/homelab/ansible.cfg"
+export ANSIBLE_VAULT_PASSWORD_FILE=~/.ansible/vault-password
+ansible-playbook -i Ansible/homelab/inventories/hosts.ini Ansible/homelab/playbooks/nut.yml --limit proxmox --check --diff
+```
+Only run a non-check deployment after reviewing the diff and explicitly authorizing it.

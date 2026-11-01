@@ -1,2 +1,3 @@
 vault_nut_monitor_password: ExamplePass
 vault_nut_admin_password: ExamplePass
+vault_nut_qnap_admin_password: ExamplePass

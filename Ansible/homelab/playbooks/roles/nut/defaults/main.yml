@@ -13,6 +13,12 @@ nut_ups_serial: '000000000000'
 nut_ups_description: CPS CP900EPFCLCD
 nut_ups_maxretry: 3
 nut_ups_sdorder: -1
+nut_monitor_user: upsmon
+nut_monitor_role: "{{ 'primary' if nut_server | bool else 'secondary' }}"
+nut_monitor_power_value: 1
+nut_monitor_minsupplies: 1
+nut_monitor_shutdowncmd: "/sbin/shutdown -h +0"
+nut_monitor_notifycmd: /usr/sbin/upssched
 
 nut_upssched_pipe: /etc/nut/upssched.pipe
 nut_upssched_lock: /etc/nut/upssched.lock

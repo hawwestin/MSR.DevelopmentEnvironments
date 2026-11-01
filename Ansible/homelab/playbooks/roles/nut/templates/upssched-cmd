@@ -4,6 +4,9 @@
 # Shutdown is only allowed after verifying that the system is actually on battery
 # and that the runtime/load thresholds indicate a real deficit.
 
+RUNTIME_THRESHOLD="{{ nut_upssched_shutdown_runtime_seconds }}"
+LOAD_THRESHOLD="{{ nut_upssched_shutdown_load_percent }}"
+
 UPSNAME="${UPSNAME:-${1:-unknown}}"
 NOTIFYTYPE="${NOTIFYTYPE:-${1:-unknown}}"
 
@@ -34,7 +37,7 @@ case "$1" in
         ;;
     lowbatt)
         log_event "Low-battery notification received. status=$STATUS runtime=${RUNTIME}s load=${LOAD}%"
-        if printf '%s' "$STATUS" | grep -q 'OB' && [ "$RUNTIME" -lt 300 ]; then
+        if printf '%s' "$STATUS" | grep -q 'OB' && [ "$RUNTIME" -lt "$RUNTIME_THRESHOLD" ] && [ "$LOAD" -ge "$LOAD_THRESHOLD" ]; then
             log_event "Runtime below safe threshold while on battery; shutdown action would be evaluated next."
         else
             log_event "Low-battery flag ignored: runtime/load do not meet the safe shutdown gate."
@@ -42,7 +45,7 @@ case "$1" in
         ;;
     shutdowncritical)
         log_event "Shutdown-critical notification received. status=$STATUS runtime=${RUNTIME}s load=${LOAD}%"
-        if printf '%s' "$STATUS" | grep -q 'OB' && [ "$RUNTIME" -lt 300 ]; then
+        if printf '%s' "$STATUS" | grep -q 'OB' && [ "$RUNTIME" -lt "$RUNTIME_THRESHOLD" ] && [ "$LOAD" -ge "$LOAD_THRESHOLD" ]; then
             log_event "Safe shutdown condition met; requesting forced shutdown."
             /usr/sbin/upsmon -c fsd
         else
