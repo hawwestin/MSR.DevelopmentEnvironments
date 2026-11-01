@@ -19,6 +19,10 @@ ALWAYS:
 - Use --check --diff where supported.
 - Explain potentially destructive operations.
 - Ask for explicit user approval before any infrastructure changes.
+- Use Ansible Vault for sensitive data.
+- Use SSH keys with passphrases for all access.
+- Make backups of all critical data before any changes. Fetch them to a secure local location.
 
 The user must manually authorize every deployment.
 No autonomous infrastructure modifications are allowed.
+Access to the production cluster is restricted to authorized personnel only with SSH keys and passphrases. All operations must be logged and auditable.
