@@ -80,6 +80,15 @@
     mode: '0640'
   notify: Restart NUT server
 
+- name: Create isolated NUT scheduler test directory
+  ansible.builtin.file:
+    path: "{{ nut_test_upssched_dir }}"
+    state: directory
+    owner: root
+    group: nut
+    mode: '0750'
+  when: nut_test_mode | bool
+
 - name: Configure the physical UPS driver
   ansible.builtin.template:
     src: ups.conf.j2

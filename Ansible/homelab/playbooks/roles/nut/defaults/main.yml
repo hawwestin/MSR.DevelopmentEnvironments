@@ -19,6 +19,8 @@ nut_monitor_role: "{{ 'primary' if nut_server | bool else 'secondary' }}"
 nut_monitor_power_value: 1
 nut_monitor_minsupplies: 1
 nut_monitor_shutdowncmd: "/sbin/shutdown -h +0"
+nut_test_mode: false
+nut_test_shutdowncmd: "/usr/bin/logger -t nut-test 'SHUTDOWNCMD invoked; shutdown suppressed'"
 # TODO confirm this path is OK
 nut_monitor_notifycmd: /usr/sbin/upssched
 
@@ -29,6 +31,10 @@ nut_upssched_cmd: /etc/nut/upssched-cmd
 nut_upssched_onbatt_timer_seconds: 30
 nut_upssched_shutdown_runtime_seconds: 300
 nut_upssched_shutdown_load_percent: 70
+nut_test_upssched_dir: /run/nut/upssched-test
+nut_test_upssched_pipe: "{{ nut_test_upssched_dir }}/upssched.pipe"
+nut_test_upssched_lock: "{{ nut_test_upssched_dir }}/upssched.lock"
+nut_test_upssched_onbatt_timer_seconds: 5
 
 nut_server_packages:
   - nut-server

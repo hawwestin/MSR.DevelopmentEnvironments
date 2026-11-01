@@ -20,11 +20,20 @@ safe_num() {
 
 log_event() {
     logger -t upssched-cmd "$*"
+{% if nut_test_mode | bool %}
+    wall "$*"
+{% endif %}
 }
 
+{% if nut_test_mode | bool %}
+STATUS="${NUT_TEST_UPS_STATUS:-$(upsc "$UPSNAME" ups.status 2>/dev/null || echo "UNKNOWN")}"
+RUNTIME=$(safe_num "${NUT_TEST_BATTERY_RUNTIME:-$(upsc "$UPSNAME" battery.runtime 2>/dev/null || echo 0)}")
+LOAD=$(safe_num "${NUT_TEST_UPS_LOAD:-$(upsc "$UPSNAME" ups.load 2>/dev/null || echo 0)}")
+{% else %}
 STATUS=$(upsc "$UPSNAME" ups.status 2>/dev/null || echo "UNKNOWN")
 RUNTIME=$(safe_num "$(upsc "$UPSNAME" battery.runtime 2>/dev/null || echo 0)")
 LOAD=$(safe_num "$(upsc "$UPSNAME" ups.load 2>/dev/null || echo 0)")
+{% endif %}
 
 log_event "event=$1 upsname=$UPSNAME notifytype=$NOTIFYTYPE status=$STATUS runtime=${RUNTIME}s load=${LOAD}%"
 
@@ -46,8 +55,12 @@ case "$1" in
     shutdowncritical)
         log_event "Shutdown-critical notification received. status=$STATUS runtime=${RUNTIME}s load=${LOAD}%"
         if printf '%s' "$STATUS" | grep -q 'OB' && [ "$RUNTIME" -lt "$RUNTIME_THRESHOLD" ] && [ "$LOAD" -ge "$LOAD_THRESHOLD" ]; then
+{% if nut_test_mode | bool %}
+            log_event "Test mode: shutdown condition met; suppressing forced shutdown."
+{% else %}
             log_event "Safe shutdown condition met; requesting forced shutdown."
             /usr/sbin/upsmon -c fsd
+{% endif %}
         else
             log_event "No shutdown triggered: runtime/load below approved policy."
         fi

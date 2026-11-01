@@ -116,7 +116,7 @@ RUN_AS_USER {{ nut_RUN_AS_USER }}
 # MONITOR su700@server.example.com 1 upsmon secretpass secondary
 # MONITOR myups@localhost 1 upsmon pass primary	# (or secondary)
 
-MONITOR {{ nut_ups_name }}@{{ nut_server_address }} {{ nut_monitor_power_value }} {{ nut_monitor_user }} {{ vault_nut_monitor_password }} {{ nut_monitor_role }}
+MONITOR {{ nut_ups_name }}@{{ nut_server_address }} {{ 0 if nut_test_mode | bool else nut_monitor_power_value }} {{ nut_monitor_user }} {{ vault_nut_monitor_password }} {{ nut_monitor_role }}
 
 # --------------------------------------------------------------------------
 # MINSUPPLIES <num>
@@ -151,7 +151,7 @@ MINSUPPLIES {{ nut_monitor_minsupplies }}
 # such as posting a message with 'logger' or 'wall' or 'mailx'. Do be careful
 # to plug the UPS back into the wall in a timely fashion.
 
-SHUTDOWNCMD {{ nut_monitor_shutdowncmd | to_json }}
+SHUTDOWNCMD {{ (nut_test_shutdowncmd if nut_test_mode | bool else nut_monitor_shutdowncmd) | to_json }}
 
 # --------------------------------------------------------------------------
 # NOTIFYCMD <command>

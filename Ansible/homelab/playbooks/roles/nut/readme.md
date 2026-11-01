@@ -19,7 +19,6 @@ Today I measure power usage via smart plug on the wall before UPS. This gives me
 NUT can do more automations in the future. Today I just don't want to damage any host and its data. 
 
 # TODO
-- Safely test callback conditions without triggering `upsmon -c fsd` or shutting down a host.
 - Proxmox Cluster HA management && Ceph converged cluster management
     - for upssched-cmd design and review Proxmox HA and Ceph shutdown coordination before enabling NUT monitor services or automatic shutdown behavior to keep homelab safe in case of power loss 
 - Add appropriate monitor restart handling if and when `nut-monitor` is approved for activation.
@@ -32,15 +31,55 @@ The role renders `nut.conf`, `upsmon.conf`, `upssched.conf`, and `upssched-cmd` 
 
 Required Vault variables are `vault_nut_monitor_password`, `vault_nut_admin_password`, and `vault_nut_qnap_admin_password`. The QNAP `[admin]` compatibility account is retained, but its password is supplied through Vault.
 
-The role currently stops and disables `nut-monitor`. Do not enable it or trigger the callback's forced-shutdown path until the Proxmox HA and Ceph shutdown coordination described above has been designed, tested safely, and explicitly approved. Proxmox/cluster playbooks are user-run only; an AI agent must not execute them.
+The role always stops and disables `nut-monitor`. Do not enable it until the Proxmox HA and Ceph shutdown coordination described above has been designed, tested safely, and explicitly approved. Proxmox/cluster playbooks are user-run only; an AI agent must not execute them.
+
+## Log-Only Callback Test
+
+`nut_test_mode` defaults to `false`. From the repository root, review the safe test configuration on `opti3040` with:
+
+```bash
+ansible-playbook -i Ansible/homelab/inventories/hosts.ini Ansible/homelab/playbooks/nut.yml --limit opti3040 --check --diff -e nut_test_mode=true
+```
+
+Only the user may run a deployment, after reviewing the diff. To deploy the test configuration, run the same command without `--check`:
+
+```bash
+ansible-playbook -i Ansible/homelab/inventories/hosts.ini Ansible/homelab/playbooks/nut.yml --limit opti3040 --diff -e nut_test_mode=true
+```
+
+Test mode leaves `nut-monitor` stopped and disabled, sets the monitored power value to zero, uses a logger-only `SHUTDOWNCMD`, routes scheduler timers through isolated runtime files, and makes the callback write to syslog and `wall` without invoking `upsmon -c fsd`.
+
+With test mode deployed, run callback cases directly on `opti3040` to exercise both sides of the condition without changing UPS state:
+
+```bash
+sudo env UPSNAME=CBSups NOTIFYTYPE=SHUTDOWN NUT_TEST_UPS_STATUS=OL NUT_TEST_BATTERY_RUNTIME=200 NUT_TEST_UPS_LOAD=80 /etc/nut/upssched-cmd shutdowncritical
+sudo env UPSNAME=CBSups NOTIFYTYPE=SHUTDOWN NUT_TEST_UPS_STATUS=OB NUT_TEST_BATTERY_RUNTIME=200 NUT_TEST_UPS_LOAD=80 /etc/nut/upssched-cmd shutdowncritical
+```
+Test results
+```bash
+sudo journalctl -t upssched-cmd --since "5 minutes ago"
+```
+
+To exercise scheduler routing, while test mode is deployed and `nut-monitor` remains stopped:
+
+```bash
+sudo env UPSNAME=CBSups NOTIFYTYPE=SHUTDOWN NUT_TEST_UPS_STATUS=OB NUT_TEST_BATTERY_RUNTIME=200 NUT_TEST_UPS_LOAD=80 /usr/sbin/upssched
+sudo env UPSNAME=CBSups NOTIFYTYPE=ONBATT /usr/sbin/upssched
+sudo env UPSNAME=CBSups NOTIFYTYPE=ONLINE /usr/sbin/upssched
+```
+
+`ONBATT` starts a five-second test timer; `ONLINE` cancels it. You can also omit the `ONLINE` invocation and observe the timer callback. These are synthetic scheduler events only; do not generate a real UPS power-loss or shutdown event. After testing, restore the normal rendered configuration by running the playbook without `-e nut_test_mode=true`, again limited to `opti3040` and user-run only.
 
 For a Proxmox check-mode review, start `ssh-agent`, add the passphrase-protected key, then run this from the repository root:
 ```bash
 eval "$(ssh-agent -s)"
 ssh-add ~/.ssh/id_rsa_windows
+
 export ANSIBLE_CONFIG="$PWD/Ansible/homelab/ansible.cfg"
 export ANSIBLE_VAULT_PASSWORD_FILE=~/.ansible/vault-password
+
 ansible-playbook -i Ansible/homelab/inventories/hosts.ini Ansible/homelab/playbooks/nut.yml --limit opti3040 --check --diff
+
 ansible-playbook -i Ansible/homelab/inventories/hosts.ini Ansible/homelab/playbooks/nut.yml --limit proxmox --check --diff
 ```
 Only run a non-check deployment after reviewing the diff and explicitly authorizing it.

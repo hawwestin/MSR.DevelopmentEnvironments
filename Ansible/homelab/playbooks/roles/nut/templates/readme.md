@@ -30,7 +30,9 @@ The role explicitly stops and disables `nut-monitor` on managed hosts. It does n
 
 On the server, the role enables and starts `nut-server`, and starts `nut-driver-enumerator` if its unit is present. On clients, any existing local `nut-server` and `nut-driver-enumerator` services are stopped and disabled.
 
-Do not enable `nut-monitor` or rely on its shutdown behavior until the Proxmox HA and Ceph shutdown sequence is designed, reviewed, and explicitly approved.
+`nut_test_mode` defaults to `false`. When enabled, the generated monitor configuration has `MONITOR` power value `0` and a logger-only `SHUTDOWNCMD`; the callback logs to syslog and `wall` and suppresses the FSD request. Scheduler test events use separate runtime files and a five-second timer. The service remains stopped and disabled.
+
+Do not enable `nut-monitor` or rely on its production shutdown behavior until the Proxmox HA and Ceph shutdown sequence is designed, reviewed, and explicitly approved.
 
 ## Credentials
 

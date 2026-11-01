@@ -1,12 +1,12 @@
-PIPEFN {{ nut_upssched_pipe }}
-LOCKFN {{ nut_upssched_lock }}
+PIPEFN {{ nut_test_upssched_pipe if nut_test_mode | bool else nut_upssched_pipe }}
+LOCKFN {{ nut_test_upssched_lock if nut_test_mode | bool else nut_upssched_lock }}
 CMDSCRIPT {{ nut_upssched_cmd }}
 
 # Track the battery event without forcing shutdown on the LB flag alone.
 # START-TIMER fires after the UPS has been on battery long enough to make the
 # alarm action visible, and ONLINE cancels the timer when power is restored.
 AT ONLINE * CANCEL-TIMER onbatt
-AT ONBATT * START-TIMER onbatt {{ nut_upssched_onbatt_timer_seconds }}
+AT ONBATT * START-TIMER onbatt {{ nut_test_upssched_onbatt_timer_seconds if nut_test_mode | bool else nut_upssched_onbatt_timer_seconds }}
 AT LOWBATT * EXECUTE lowbatt
 AT COMMBAD * EXECUTE commbad
 AT COMMOK * EXECUTE commok
