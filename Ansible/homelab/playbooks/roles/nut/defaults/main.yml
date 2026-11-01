@@ -1,6 +1,7 @@
 ---
 nut_server: false
 nut_mode: netclient
+nut_RUN_AS_USER: root
 
 nut_server_address: 192.168.50.20
 nut_server_port: 3493
@@ -18,10 +19,12 @@ nut_monitor_role: "{{ 'primary' if nut_server | bool else 'secondary' }}"
 nut_monitor_power_value: 1
 nut_monitor_minsupplies: 1
 nut_monitor_shutdowncmd: "/sbin/shutdown -h +0"
+# TODO confirm this path is OK
 nut_monitor_notifycmd: /usr/sbin/upssched
 
 nut_upssched_pipe: /etc/nut/upssched.pipe
 nut_upssched_lock: /etc/nut/upssched.lock
+# TODO  NOT used ? its hardcoded in role main.yml
 nut_upssched_cmd: /etc/nut/upssched-cmd
 nut_upssched_onbatt_timer_seconds: 30
 nut_upssched_shutdown_runtime_seconds: 300

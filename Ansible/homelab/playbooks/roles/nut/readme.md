@@ -19,8 +19,12 @@ Today I measure power usage via smart plug on the wall before UPS. This gives me
 NUT can do more automations in the future. Today I just don't want to damage any host and its data. 
 
 # TODO
-- Proxmox Cluster HA management
-- Ceph converged clsuter management
+- Proxmox Cluster HA management && Ceph converged clsuter management
+    - Design and review Proxmox HA and Ceph shutdown coordination before enabling NUT monitor services or automatic shutdown behavior.
+- Safely test callback conditions without triggering `upsmon -c fsd` or shutting down a host.
+- Add appropriate monitor restart handling if and when `nut-monitor` is approved for activation.
+- Document and manually review Proxmox play commands; run them only by the user with the passphrase-protected SSH key loaded in `ssh-agent`.
+
 
 ## Role Configuration
 The role renders `nut.conf`, `upsmon.conf`, `upssched.conf`, and `upssched-cmd` on server and client hosts. The server additionally receives `ups.conf`, `upsd.conf`, and `upsd.users`. Passwords used by these templates belong in the inventory Ansible Vault file at `inventories/group_vars/all/vault.yml`; do not commit plaintext credentials.

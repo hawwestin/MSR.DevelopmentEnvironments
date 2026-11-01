@@ -3,8 +3,6 @@ The role now renders `/etc/nut/upsd.users` from `templates/upsd.users.j2`. Its p
 
 Do not decrypt or commit passwords as plaintext. Maintain inventory secrets with `ansible-vault` and use the repository's configured vault password workflow.
 
-TODO use those files and keep vault variables local to role. Use some ansible file dir sstructure so it is auto discoverd if possible. 
-
 # snippet
 ```bash
 EDITOR=nano  ansible-vault encrypt Ansible/homelab/playbooks/roles/nut/files/users.vault
