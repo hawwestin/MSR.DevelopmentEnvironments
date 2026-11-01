@@ -19,11 +19,12 @@ Today I measure power usage via smart plug on the wall before UPS. This gives me
 NUT can do more automations in the future. Today I just don't want to damage any host and its data. 
 
 # TODO
-- Proxmox Cluster HA management && Ceph converged clsuter management
-    - Design and review Proxmox HA and Ceph shutdown coordination before enabling NUT monitor services or automatic shutdown behavior.
 - Safely test callback conditions without triggering `upsmon -c fsd` or shutting down a host.
+- Proxmox Cluster HA management && Ceph converged cluster management
+    - for upssched-cmd design and review Proxmox HA and Ceph shutdown coordination before enabling NUT monitor services or automatic shutdown behavior to keep homelab safe in case of power loss 
 - Add appropriate monitor restart handling if and when `nut-monitor` is approved for activation.
 - Document and manually review Proxmox play commands; run them only by the user with the passphrase-protected SSH key loaded in `ssh-agent`.
+- Wolnut > automate power on of the down proxmox cluster in case power is back online and UPS have enough Juice to power it back on and power off in case of another power loss. It require some time to start and to stop again host. 
 
 
 ## Role Configuration
@@ -39,6 +40,7 @@ eval "$(ssh-agent -s)"
 ssh-add ~/.ssh/id_rsa_windows
 export ANSIBLE_CONFIG="$PWD/Ansible/homelab/ansible.cfg"
 export ANSIBLE_VAULT_PASSWORD_FILE=~/.ansible/vault-password
+ansible-playbook -i Ansible/homelab/inventories/hosts.ini Ansible/homelab/playbooks/nut.yml --limit opti3040 --check --diff
 ansible-playbook -i Ansible/homelab/inventories/hosts.ini Ansible/homelab/playbooks/nut.yml --limit proxmox --check --diff
 ```
 Only run a non-check deployment after reviewing the diff and explicitly authorizing it.

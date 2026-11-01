@@ -34,3 +34,17 @@ ansible-playbook Ansible/homelab/playbooks/docker_install.yml --syntax-check
 
 ansible-playbook -i Ansible/homelab/inventories/hosts.ini Ansible/homelab/playbooks/nut.yml --limit opti3040 --check
 ```
+
+nut backup
+```bash
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_rsa_windows
+
+export ANSIBLE_CONFIG="$PWD/Ansible/homelab/ansible.cfg"
+ansible-playbook \
+  -i Ansible/homelab/inventories/hosts.ini \
+  Ansible/homelab/playbooks/fetch_nut_snapshot.yml \
+  --limit proxmox \
+  -e "nut_snapshot_id=$(date -u +%Y%m%dT%H%M%SZ)"
+
+```
