@@ -1,6 +1,8 @@
 # General
 Configuration of NUT Ups tools. Server and client roles.
 
+Document and manually review Proxmox play commands; run them only by the user with the passphrase-protected SSH key loaded in `ssh-agent`.
+
 # Homelab context
 UPS is connected via USB to Rasppbery Pi. Other hosts like proxmox and Qnap Nas are clients to it. 
 Proxmox configuration is as code driven by this ansible playbook. 
@@ -22,7 +24,6 @@ NUT can do more automations in the future. Today I just don't want to damage any
 - Proxmox Cluster HA management && Ceph converged cluster management
     - for upssched-cmd design and review Proxmox HA and Ceph shutdown coordination before enabling NUT monitor services or automatic shutdown behavior to keep homelab safe in case of power loss 
 - Add appropriate monitor restart handling if and when `nut-monitor` is approved for activation.
-- Document and manually review Proxmox play commands; run them only by the user with the passphrase-protected SSH key loaded in `ssh-agent`.
 - Wolnut > automate power on of the down proxmox cluster in case power is back online and UPS have enough Juice to power it back on and power off in case of another power loss. It require some time to start and to stop again host. 
 
 
@@ -32,6 +33,10 @@ The role renders `nut.conf`, `upsmon.conf`, `upssched.conf`, and `upssched-cmd` 
 Required Vault variables are `vault_nut_monitor_password`, `vault_nut_admin_password`, and `vault_nut_qnap_admin_password`. The QNAP `[admin]` compatibility account is retained, but its password is supplied through Vault.
 
 The role always stops and disables `nut-monitor`. Do not enable it until the Proxmox HA and Ceph shutdown coordination described above has been designed, tested safely, and explicitly approved. Proxmox/cluster playbooks are user-run only; an AI agent must not execute them.
+
+The read-only preflight run on 2026-11-02 found `nut-monitor` active and enabled on `pve2` and `opti3050` (inactive and disabled on `opti3040`). These PVE monitors are secondary clients with power value 1 and `MINSUPPLIES 1`; NUT's native critical-battery path can invoke `SHUTDOWNCMD` independently of the callback. Do not induce a UPS event or enable further automatic behavior until the user has reviewed and stopped the active monitor services. This is a point-in-time observation; verify service state again before any test or deployment.
+
+`LOWBATT` is routed to the callback. Its gate requires `OB` status, valid integer runtime and load readings, and either runtime below the configured safe threshold or load at/above the configured limit. Missing or malformed readings fail closed. Both `LOWBATT` and `SHUTDOWN` currently log a met gate without requesting FSD; the coordinated shutdown action is not implemented yet.
 
 ## Log-Only Callback Test
 
@@ -49,11 +54,14 @@ ansible-playbook -i Ansible/homelab/inventories/hosts.ini Ansible/homelab/playbo
 
 Test mode leaves `nut-monitor` stopped and disabled, sets the monitored power value to zero, uses a logger-only `SHUTDOWNCMD`, routes scheduler timers through isolated runtime files, and makes the callback write to syslog and `wall` without invoking `upsmon -c fsd`.
 
-With test mode deployed, run callback cases directly on `opti3040` to exercise both sides of the condition without changing UPS state:
+With test mode deployed, run callback cases directly on `opti3040` to exercise the LOWBATT gate without changing UPS state:
 
 ```bash
-sudo env UPSNAME=CBSups NOTIFYTYPE=SHUTDOWN NUT_TEST_UPS_STATUS=OL NUT_TEST_BATTERY_RUNTIME=200 NUT_TEST_UPS_LOAD=80 /etc/nut/upssched-cmd shutdowncritical
-sudo env UPSNAME=CBSups NOTIFYTYPE=SHUTDOWN NUT_TEST_UPS_STATUS=OB NUT_TEST_BATTERY_RUNTIME=200 NUT_TEST_UPS_LOAD=80 /etc/nut/upssched-cmd shutdowncritical
+sudo env UPSNAME=CBSups NOTIFYTYPE=LOWBATT NUT_TEST_UPS_STATUS=OB NUT_TEST_BATTERY_RUNTIME=400 NUT_TEST_UPS_LOAD=80 /etc/nut/upssched-cmd lowbatt
+sudo env UPSNAME=CBSups NOTIFYTYPE=LOWBATT NUT_TEST_UPS_STATUS=OB NUT_TEST_BATTERY_RUNTIME=200 NUT_TEST_UPS_LOAD=40 /etc/nut/upssched-cmd lowbatt
+sudo env UPSNAME=CBSups NOTIFYTYPE=LOWBATT NUT_TEST_UPS_STATUS=OL NUT_TEST_BATTERY_RUNTIME=200 NUT_TEST_UPS_LOAD=80 /etc/nut/upssched-cmd lowbatt
+sudo env UPSNAME=CBSups NOTIFYTYPE=LOWBATT NUT_TEST_UPS_STATUS=OB NUT_TEST_BATTERY_RUNTIME=invalid NUT_TEST_UPS_LOAD=80 /etc/nut/upssched-cmd lowbatt
+sudo env UPSNAME=CBSups NOTIFYTYPE=SHUTDOWN NUT_TEST_UPS_STATUS=OB NUT_TEST_BATTERY_RUNTIME=200 NUT_TEST_UPS_LOAD=40 /etc/nut/upssched-cmd shutdowncritical
 ```
 Test results
 ```bash

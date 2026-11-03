@@ -10,12 +10,22 @@ LOAD_THRESHOLD="{{ nut_upssched_shutdown_load_percent }}"
 UPSNAME="${UPSNAME:-${1:-unknown}}"
 NOTIFYTYPE="${NOTIFYTYPE:-${1:-unknown}}"
 
-safe_num() {
-    value="${1:-0}"
+read_uint() {
+    value="${1:-}"
     case "$value" in
-        ''|*[!0-9]*) echo 0 ;;
-        *) echo "$value" ;;
+        ''|*[!0-9]*) return 1 ;;
+        *) printf '%s' "$value" ;;
     esac
+}
+
+shutdown_condition_met() {
+    case " $STATUS " in
+        *' OB '*) ;;
+        *) return 1 ;;
+    esac
+
+    [ "$RUNTIME_VALID" = true ] && [ "$LOAD_VALID" = true ] || return 1
+    [ "$LOAD" -ge "$LOAD_THRESHOLD" ] || [ "$RUNTIME" -lt "$RUNTIME_THRESHOLD" ]
 }
 
 log_event() {
@@ -27,13 +37,27 @@ log_event() {
 
 {% if nut_test_mode | bool %}
 STATUS="${NUT_TEST_UPS_STATUS:-$(upsc "$UPSNAME" ups.status 2>/dev/null || echo "UNKNOWN")}"
-RUNTIME=$(safe_num "${NUT_TEST_BATTERY_RUNTIME:-$(upsc "$UPSNAME" battery.runtime 2>/dev/null || echo 0)}")
-LOAD=$(safe_num "${NUT_TEST_UPS_LOAD:-$(upsc "$UPSNAME" ups.load 2>/dev/null || echo 0)}")
+RUNTIME_RAW="${NUT_TEST_BATTERY_RUNTIME:-$(upsc "$UPSNAME" battery.runtime 2>/dev/null || true)}"
+LOAD_RAW="${NUT_TEST_UPS_LOAD:-$(upsc "$UPSNAME" ups.load 2>/dev/null || true)}"
 {% else %}
 STATUS=$(upsc "$UPSNAME" ups.status 2>/dev/null || echo "UNKNOWN")
-RUNTIME=$(safe_num "$(upsc "$UPSNAME" battery.runtime 2>/dev/null || echo 0)")
-LOAD=$(safe_num "$(upsc "$UPSNAME" ups.load 2>/dev/null || echo 0)")
+RUNTIME_RAW=$(upsc "$UPSNAME" battery.runtime 2>/dev/null || true)
+LOAD_RAW=$(upsc "$UPSNAME" ups.load 2>/dev/null || true)
 {% endif %}
+
+if RUNTIME=$(read_uint "$RUNTIME_RAW"); then
+    RUNTIME_VALID=true
+else
+    RUNTIME=unknown
+    RUNTIME_VALID=false
+fi
+
+if LOAD=$(read_uint "$LOAD_RAW"); then
+    LOAD_VALID=true
+else
+    LOAD=unknown
+    LOAD_VALID=false
+fi
 
 log_event "event=$1 upsname=$UPSNAME notifytype=$NOTIFYTYPE status=$STATUS runtime=${RUNTIME}s load=${LOAD}%"
 
@@ -46,20 +70,19 @@ case "$1" in
         ;;
     lowbatt)
         log_event "Low-battery notification received. status=$STATUS runtime=${RUNTIME}s load=${LOAD}%"
-        if printf '%s' "$STATUS" | grep -q 'OB' && [ "$RUNTIME" -lt "$RUNTIME_THRESHOLD" ] && [ "$LOAD" -ge "$LOAD_THRESHOLD" ]; then
-            log_event "Runtime below safe threshold while on battery; shutdown action would be evaluated next."
+        if shutdown_condition_met; then
+            log_event "LOWBATT shutdown gate met; cluster coordination is not enabled in this callback stage."
         else
-            log_event "Low-battery flag ignored: runtime/load do not meet the safe shutdown gate."
+            log_event "LOWBATT shutdown gate not met: require OB status, valid readings, and load/runtime threshold."
         fi
         ;;
     shutdowncritical)
         log_event "Shutdown-critical notification received. status=$STATUS runtime=${RUNTIME}s load=${LOAD}%"
-        if printf '%s' "$STATUS" | grep -q 'OB' && [ "$RUNTIME" -lt "$RUNTIME_THRESHOLD" ] && [ "$LOAD" -ge "$LOAD_THRESHOLD" ]; then
+        if shutdown_condition_met; then
 {% if nut_test_mode | bool %}
             log_event "Test mode: shutdown condition met; suppressing forced shutdown."
 {% else %}
-            log_event "Safe shutdown condition met; requesting forced shutdown."
-            /usr/sbin/upsmon -c fsd
+            log_event "Shutdown condition met; suppressing FSD until cluster coordination is implemented."
 {% endif %}
         else
             log_event "No shutdown triggered: runtime/load below approved policy."

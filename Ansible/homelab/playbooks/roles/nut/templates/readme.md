@@ -22,7 +22,9 @@ The role installs server packages on the server and client packages on clients. 
 
 `upssched.conf.j2` starts an `onbatt` timer when the UPS reports `ONBATT`; `ONLINE` cancels that timer. When the timer expires, the callback logs the event. `LOWBATT`, communication events, and `SHUTDOWN` are sent directly to the callback.
 
-The callback logs `LOWBATT` and checks on-battery status, runtime, and load, but does not request forced shutdown for that event. For `SHUTDOWN`, it requests NUT forced shutdown only when the UPS is on battery, runtime is below the configured limit, and load is at or above the configured limit.
+`LOWBATT` is routed to the callback. A shutdown gate is met only when status contains `OB`, both runtime and load are valid non-negative integers, and either runtime is below its configured threshold or load is at or above its configured threshold. Missing or malformed readings fail closed. The callback currently logs a met gate but does not start cluster coordination or request FSD.
+
+`SHUTDOWN` also uses the same gate, but FSD is deliberately suppressed until the Proxmox HA and Ceph shutdown coordination has been implemented and approved.
 
 ## Current Service State
 

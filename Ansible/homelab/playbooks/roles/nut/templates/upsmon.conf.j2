@@ -296,9 +296,7 @@ POWERDOWNFLAG /etc/killpower
 #
 NOTIFYFLAG ONLINE	SYSLOG+WALL+EXEC
 NOTIFYFLAG ONBATT	SYSLOG+WALL+EXEC
-# Do not add Exec to lowbat. Its tiggered on 50%+ UPS usage. 
-# As LOWBAT is tiggered also on High UPS usage and estimated time then is low we don;t want to shut down servers when they are just working. Even when UPS online. 
-# NOTIFYFLAG LOWBATT	SYSLOG+WALL
+NOTIFYFLAG LOWBATT	SYSLOG+WALL+EXEC
 NOTIFYFLAG FSD		SYSLOG+WALL+EXEC
 NOTIFYFLAG COMMOK	SYSLOG+WALL+EXEC
 NOTIFYFLAG COMMBAD	SYSLOG+WALL+EXEC
