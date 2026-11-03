@@ -3,7 +3,7 @@ name: homeassistant
 services:
   homeassistant:
     container_name: homeassistant
-    image: ghcr.io/home-assistant/home-assistant:2026.6
+    image: ghcr.io/home-assistant/home-assistant:2026.8
     restart: unless-stopped
     networks:
       homeassistant: {}
