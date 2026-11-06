@@ -35,6 +35,11 @@ services:
     env_file:
       - .env.local
     command: [ "--config", "/app/config.yaml", "--port", "4000" ]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     depends_on:
       ollama:
         condition: service_healthy
