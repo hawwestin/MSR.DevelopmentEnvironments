@@ -20,6 +20,12 @@ To stop
 docker compose -f LocalAI/WSL_AI/litellm/docker-compose.yml stop
 
 ```
+Update
+```bash
+docker compose  -f LocalAI/WSL_AI/litellm/docker-compose.yml pull
+docker compose --env-file LocalAI/WSL_AI/litellm/.env.local -f LocalAI/WSL_AI/litellm/docker-compose.yml up -d --force-recreate
+```
+
 
 # env local variables
 Copy the committed `.env` template to `.env.local`, then replace the placeholder values with your own credentials and random keys. `.env.local` is ignored by Git; do not put real credentials in `.env`.
