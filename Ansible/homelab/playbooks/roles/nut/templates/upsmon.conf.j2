@@ -142,7 +142,7 @@ MONITOR {{ nut_ups_name }}@{{ nut_server_address }} {{ 0 if nut_test_mode | bool
 # THIS value trigger NATIVE NUT shutdown if the number of supplies that are receiving power is less than MINSUPPLIES.  
 # TL;DR ONE UPS on battery and low battery will be considered critical and will trigger shutdown if MINSUPPLIES is set to 1.
 
-MINSUPPLIES {{ nut_monitor_minsupplies }}
+MINSUPPLIES {{ 0 if nut_test_mode | bool else nut_monitor_minsupplies }}
 
 # --------------------------------------------------------------------------
 # SHUTDOWNCMD "<command>"
