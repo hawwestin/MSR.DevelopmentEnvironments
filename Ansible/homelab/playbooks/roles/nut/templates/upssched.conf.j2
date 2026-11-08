@@ -6,6 +6,7 @@ CMDSCRIPT {{ nut_upssched_cmd }}
 # START-TIMER fires after the UPS has been on battery long enough to make the
 # alarm action visible, and ONLINE cancels the timer when power is restored.
 AT ONLINE * CANCEL-TIMER onbatt
+AT ONLINE * EXECUTE online
 AT ONBATT * START-TIMER onbatt {{ nut_test_upssched_onbatt_timer_seconds if nut_test_mode | bool else nut_upssched_onbatt_timer_seconds }}
 AT LOWBATT * EXECUTE lowbatt
 AT COMMBAD * EXECUTE commbad
