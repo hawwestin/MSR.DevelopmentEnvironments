@@ -6,24 +6,31 @@ model_list:
     litellm_params:
       model: ollama/qwen2.5-coder:7b
       api_base: "http://ollama:11434"
+    model_info:
+      supports_function_calling: true
 
   # VRAM ~6,7GB
   - model_name: local-llama3.1-8b
     litellm_params:
       model: ollama/llama3.1:8b
       api_base: "http://ollama:11434"
+    model_info:
+      supports_function_calling: true
+      
 
   # VRAM ~7,3GB 
   - model_name: local-gemma2-9b
     litellm_params:
       model: ollama/gemma2:9b
       api_base: "http://ollama:11434"
-
+      # supports_function_calling: true # does not support tools
   # VRAM ~3,5GB
   - model_name: local-llama3.2-3b
     litellm_params:
       model: ollama/llama3.2:3b
       api_base: "http://ollama:11434"
+    model_info:
+      supports_function_calling: true
 
 
   # Local small models with VRAM limit
@@ -31,17 +38,23 @@ model_list:
     litellm_params:
       model: ollama/qwen-2gb-dev
       api_base: "http://ollama:11434"
+    model_info:
+      supports_function_calling: true
     # api_base: "http://host.docker.internal:11434" # for docker run 
 
   - model_name: local-qwen2.5-1.5b
     litellm_params:
       model: ollama/qwen2.5:1.5b
       api_base: "http://ollama:11434"
+    model_info:
+      supports_function_calling: true
 
   - model_name: local-llama3.2-1b
     litellm_params:
       model: ollama/llama3.2:1b
       api_base: "http://ollama:11434"
+    model_info:
+      supports_function_calling: true
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY

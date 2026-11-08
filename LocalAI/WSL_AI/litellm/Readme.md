@@ -98,6 +98,12 @@ Keep `api_base` as `http://ollama:11434` for Compose networking. Give every Lite
 docker compose --env-file LocalAI/WSL_AI/litellm/.env.local -f LocalAI/WSL_AI/litellm/docker-compose.yml up -d --force-recreate litellm
 ```
 
+## model parameters
+Diagnose capatibilites of model.
+```bash
+docker compose -f LocalAI/WSL_AI/litellm/docker-compose.yml exec -T ollama ollama show llama3.1:8b
+```
+VS code need capabilites of `Tools` enabled in litellm config model info. 
 
 ## Connectin LiteLLm to Gemini
 https://aistudio.google.com/docs/get-started
