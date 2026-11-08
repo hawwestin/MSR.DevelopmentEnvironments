@@ -134,6 +134,14 @@ MONITOR {{ nut_ups_name }}@{{ nut_server_address }} {{ 0 if nut_test_mode | bool
 # for this to make sense!  See big-servers.txt in the docs subdirectory
 # for more information and ideas on how to use this feature.
 
+# !!!!!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!!!!!!!!!!
+# When state OB + LB then UPS is considered to be in a critical state and will not be counted towards MINSUPPLIES. 
+# This is to avoid a race condition where the UPS is on battery and low battery, but the system has not yet been shut down.  
+# In this case, the UPS may be able to provide power for a short time, 
+# but it will not be enough to keep the system running until the UPS is fully depleted.
+# THIS value trigger NATIVE NUT shutdown if the number of supplies that are receiving power is less than MINSUPPLIES.  
+# TL;DR ONE UPS on battery and low battery will be considered critical and will trigger shutdown if MINSUPPLIES is set to 1.
+
 MINSUPPLIES {{ nut_monitor_minsupplies }}
 
 # --------------------------------------------------------------------------
