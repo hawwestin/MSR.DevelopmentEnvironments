@@ -9,6 +9,8 @@ docker container rm open-webui
 
 To start
 ```bash
+cd /mnt/c/repos/MSR.DevelopmentEnvironments
+
 docker compose --env-file LocalAI/WSL_AI/litellm/.env.local -f LocalAI/WSL_AI/litellm/docker-compose.yml up -d --wait postgres ollama
 
 bash LocalAI/WSL_AI/litellm/setup-models.sh
@@ -20,6 +22,12 @@ To stop
 docker compose -f LocalAI/WSL_AI/litellm/docker-compose.yml stop
 
 ```
+Update
+```bash
+docker compose  -f LocalAI/WSL_AI/litellm/docker-compose.yml pull
+docker compose --env-file LocalAI/WSL_AI/litellm/.env.local -f LocalAI/WSL_AI/litellm/docker-compose.yml up -d --force-recreate
+```
+
 
 # env local variables
 Copy the committed `.env` template to `.env.local`, then replace the placeholder values with your own credentials and random keys. `.env.local` is ignored by Git; do not put real credentials in `.env`.
@@ -92,6 +100,12 @@ Keep `api_base` as `http://ollama:11434` for Compose networking. Give every Lite
 docker compose --env-file LocalAI/WSL_AI/litellm/.env.local -f LocalAI/WSL_AI/litellm/docker-compose.yml up -d --force-recreate litellm
 ```
 
+## model parameters
+Diagnose capatibilites of model.
+```bash
+docker compose -f LocalAI/WSL_AI/litellm/docker-compose.yml exec -T ollama ollama show llama3.1:8b
+```
+VS code need capabilites of `Tools` enabled in litellm config model info. 
 
 ## Connectin LiteLLm to Gemini
 https://aistudio.google.com/docs/get-started
