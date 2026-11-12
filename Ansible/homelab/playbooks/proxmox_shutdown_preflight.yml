@@ -1,0 +1,164 @@
+---
+- name: Collect read-only Proxmox shutdown-coordination baseline
+  hosts: proxmox
+  become: true
+  gather_facts: false
+  serial: 1
+
+  tasks:
+    - name: Read Proxmox package versions
+      ansible.builtin.command:
+        argv:
+          - timeout
+          - 10s
+          - pveversion
+          - --verbose
+      register: shutdown_preflight_pve_version
+      changed_when: false
+      failed_when: false
+
+    - name: Read Proxmox cluster quorum
+      ansible.builtin.command:
+        argv:
+          - timeout
+          - 10s
+          - pvecm
+          - status
+      register: shutdown_preflight_quorum
+      changed_when: false
+      failed_when: false
+
+    - name: Read HA manager status
+      ansible.builtin.command:
+        argv:
+          - timeout
+          - 10s
+          - ha-manager
+          - status
+      register: shutdown_preflight_ha_status
+      changed_when: false
+      failed_when: false
+
+    - name: Read HA resource configuration
+      ansible.builtin.command:
+        argv:
+          - timeout
+          - 10s
+          - ha-manager
+          - config
+      register: shutdown_preflight_ha_config
+      changed_when: false
+      failed_when: false
+
+    - name: Read Ceph status
+      ansible.builtin.command:
+        argv:
+          - timeout
+          - 10s
+          - ceph
+          - status
+      register: shutdown_preflight_ceph_status
+      changed_when: false
+      failed_when: false
+
+    - name: Read Ceph OSD map and flags
+      ansible.builtin.command:
+        argv:
+          - timeout
+          - 10s
+          - ceph
+          - osd
+          - dump
+      register: shutdown_preflight_ceph_osd_map
+      changed_when: false
+      failed_when: false
+
+    - name: Read Ceph OSD placement
+      ansible.builtin.command:
+        argv:
+          - timeout
+          - 10s
+          - ceph
+          - osd
+          - tree
+      register: shutdown_preflight_ceph_osd_tree
+      changed_when: false
+      failed_when: false
+
+    - name: Read Ceph monitor placement
+      ansible.builtin.command:
+        argv:
+          - timeout
+          - 10s
+          - ceph
+          - mon
+          - dump
+      register: shutdown_preflight_ceph_mon_map
+      changed_when: false
+      failed_when: false
+
+    - name: Read Ceph manager placement
+      ansible.builtin.command:
+        argv:
+          - timeout
+          - 10s
+          - ceph
+          - mgr
+          - dump
+      register: shutdown_preflight_ceph_mgr_map
+      changed_when: false
+      failed_when: false
+
+    - name: Read Ceph filesystem and MDS placement when configured
+      ansible.builtin.command:
+        argv:
+          - timeout
+          - 10s
+          - ceph
+          - fs
+          - status
+      register: shutdown_preflight_ceph_fs_status
+      changed_when: false
+      failed_when: false
+
+    - name: Read NUT monitor service state
+      ansible.builtin.command:
+        argv:
+          - systemctl
+          - show
+          - --property=ActiveState
+          - --property=UnitFileState
+          - nut-monitor
+      register: shutdown_preflight_nut_monitor
+      changed_when: false
+      failed_when: false
+
+    - name: Read NUT monitor policy without exposing credentials
+      ansible.builtin.command:
+        argv:
+          - awk
+          - >-
+            $1 == "MONITOR" { printf "MONITOR %s %s <credentials-redacted> %s\n", $2, $3, $6; next }
+            $1 == "SHUTDOWNCMD" { print "SHUTDOWNCMD <configured>"; next }
+            $1 == "MINSUPPLIES" || $1 == "HOSTSYNC" || $1 == "DEADTIME" || $1 == "FINALDELAY" { print }
+          - /etc/nut/upsmon.conf
+      register: shutdown_preflight_nut_policy
+      changed_when: false
+      failed_when: false
+
+    - name: Report read-only shutdown baseline
+      ansible.builtin.debug:
+        msg:
+          host: "{{ inventory_hostname }}"
+          pve_version: "{{ shutdown_preflight_pve_version.stdout }}"
+          quorum: "{{ shutdown_preflight_quorum.stdout }}"
+          ha_status: "{{ shutdown_preflight_ha_status.stdout }}"
+          ha_config: "{{ shutdown_preflight_ha_config.stdout }}"
+          ceph_status: "{{ shutdown_preflight_ceph_status.stdout }}"
+          ceph_osd_map_and_flags: "{{ shutdown_preflight_ceph_osd_map.stdout }}"
+          ceph_osd_tree: "{{ shutdown_preflight_ceph_osd_tree.stdout }}"
+          ceph_mon_map: "{{ shutdown_preflight_ceph_mon_map.stdout }}"
+          ceph_mgr_map: "{{ shutdown_preflight_ceph_mgr_map.stdout }}"
+          ceph_fs_status: "{{ shutdown_preflight_ceph_fs_status.stdout }}"
+          nut_monitor_service: "{{ shutdown_preflight_nut_monitor.stdout }}"
+          nut_policy: "{{ shutdown_preflight_nut_policy.stdout }}"

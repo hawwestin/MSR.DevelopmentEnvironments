@@ -72,6 +72,7 @@ case "$1" in
         log_event "Low-battery notification received. status=$STATUS runtime=${RUNTIME}s load=${LOAD}%"
         if shutdown_condition_met; then
             log_event "LOWBATT shutdown gate met; cluster coordination is not enabled in this callback stage."
+            # Here we can implement a cluster coordination mechanism to determine HA disarmament and Ceph maintenacne mode.
         else
             log_event "LOWBATT shutdown gate not met: require OB status, valid readings, and load/runtime threshold."
         fi
@@ -82,7 +83,8 @@ case "$1" in
 {% if nut_test_mode | bool %}
             log_event "Test mode: shutdown condition met; suppressing forced shutdown."
 {% else %}
-            log_event "Shutdown condition met; suppressing FSD until cluster coordination is implemented."
+            # Danger zoone  until cluster coordination is implemented.
+            log_event "Shutdown condition met; FSD Forced shut down will be run soon."
 {% endif %}
         else
             log_event "No shutdown triggered: runtime/load below approved policy."

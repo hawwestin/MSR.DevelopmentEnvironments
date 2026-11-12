@@ -1,0 +1,108 @@
+#!/bin/sh
+
+# The scheduler must not treat the UPS LOWBATT flag as authoritative on its own.
+# Shutdown is only allowed after verifying that the system is actually on battery
+# and that the runtime/load thresholds indicate a real deficit.
+
+RUNTIME_THRESHOLD="{{ nut_upssched_shutdown_runtime_seconds }}"
+LOAD_THRESHOLD="{{ nut_upssched_shutdown_load_percent }}"
+
+UPSNAME="${UPSNAME:-${1:-unknown}}"
+NOTIFYTYPE="${NOTIFYTYPE:-${1:-unknown}}"
+
+read_uint() {
+    value="${1:-}"
+    case "$value" in
+        ''|*[!0-9]*) return 1 ;;
+        *) printf '%s' "$value" ;;
+    esac
+}
+
+shutdown_condition_met() {
+    case " $STATUS " in
+        *' OB '*) ;;
+        *) return 1 ;;
+    esac
+
+    [ "$RUNTIME_VALID" = true ] && [ "$LOAD_VALID" = true ] || return 1
+    [ "$LOAD" -ge "$LOAD_THRESHOLD" ] || [ "$RUNTIME" -lt "$RUNTIME_THRESHOLD" ]
+}
+
+log_event() {
+    logger -t upssched-cmd "$*"
+{% if nut_test_mode | bool %}
+    wall "$*"
+{% endif %}
+}
+
+{% if nut_test_mode | bool %}
+STATUS="${NUT_TEST_UPS_STATUS:-$(upsc "$UPSNAME" ups.status 2>/dev/null || echo "UNKNOWN")}"
+RUNTIME_RAW="${NUT_TEST_BATTERY_RUNTIME:-$(upsc "$UPSNAME" battery.runtime 2>/dev/null || true)}"
+LOAD_RAW="${NUT_TEST_UPS_LOAD:-$(upsc "$UPSNAME" ups.load 2>/dev/null || true)}"
+{% else %}
+STATUS=$(upsc "$UPSNAME" ups.status 2>/dev/null || echo "UNKNOWN")
+RUNTIME_RAW=$(upsc "$UPSNAME" battery.runtime 2>/dev/null || true)
+LOAD_RAW=$(upsc "$UPSNAME" ups.load 2>/dev/null || true)
+{% endif %}
+
+if RUNTIME=$(read_uint "$RUNTIME_RAW"); then
+    RUNTIME_VALID=true
+else
+    RUNTIME=unknown
+    RUNTIME_VALID=false
+fi
+
+if LOAD=$(read_uint "$LOAD_RAW"); then
+    LOAD_VALID=true
+else
+    LOAD=unknown
+    LOAD_VALID=false
+fi
+
+log_event "event=$1 upsname=$UPSNAME notifytype=$NOTIFYTYPE status=$STATUS runtime=${RUNTIME}s load=${LOAD}%"
+
+case "$1" in
+    online)
+        log_event "Power restored; cancelling early-shutdown timer."
+        ;;
+    onbatt)
+        log_event "UPS on battery. status=$STATUS runtime=${RUNTIME}s load=${LOAD}%"
+        ;;
+    lowbatt)
+        log_event "Low-battery notification received. status=$STATUS runtime=${RUNTIME}s load=${LOAD}%"
+        if shutdown_condition_met; then
+            log_event "LOWBATT shutdown gate met; cluster coordination is not enabled in this callback stage."
+            # Here we can implement a cluster coordination mechanism to determine HA disarmament and Ceph maintenacne mode.
+        else
+            log_event "LOWBATT shutdown gate not met: require OB status, valid readings, and load/runtime threshold."
+        fi
+        ;;
+    shutdowncritical)
+        log_event "Shutdown-critical notification received. status=$STATUS runtime=${RUNTIME}s load=${LOAD}%"
+        if shutdown_condition_met; then
+{% if nut_test_mode | bool %}
+            log_event "Test mode: shutdown condition met; suppressing forced shutdown."
+{% else %}
+            # Danger zoone  until cluster coordination is implemented.
+            log_event "Shutdown condition met; FSD Forced shut down will be run soon."
+{% endif %}
+        else
+            log_event "No shutdown triggered: runtime/load below approved policy."
+        fi
+        ;;
+    commbad)
+        log_event "UPS communication lost."
+        ;;
+    commok)
+        log_event "UPS communications restored."
+        ;;
+    upsgone)
+        log_event "UPS no longer reachable by NUT."
+        ;;
+    powerdown)
+        log_event "Power-down sequence requested; no action taken in this stage."
+        ;;
+    *)
+        log_event "Unrecognized command: $1"
+        ;;
+esac
