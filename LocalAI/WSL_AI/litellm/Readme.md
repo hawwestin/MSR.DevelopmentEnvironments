@@ -9,6 +9,8 @@ docker container rm open-webui
 
 To start
 ```bash
+cd /mnt/c/repos/MSR.DevelopmentEnvironments
+
 docker compose --env-file LocalAI/WSL_AI/litellm/.env.local -f LocalAI/WSL_AI/litellm/docker-compose.yml up -d --wait postgres ollama
 
 bash LocalAI/WSL_AI/litellm/setup-models.sh

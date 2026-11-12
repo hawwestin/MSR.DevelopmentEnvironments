@@ -16,6 +16,37 @@ model_list:
       api_base: "http://ollama:11434"
     model_info:
       supports_function_calling: true
+
+  # VRAM ~6,7GB https://ollama.com/library/nemotron-3.5-bolt
+  - model_name: local-nemotron-3.5-bolt
+    litellm_params:
+      model: ollama/nemotron-3.5-bolt:e4b
+      api_base: "http://ollama:11434"
+    model_info:
+      supports_function_calling: true
+
+  # VRAM ~8,0GB https://ollama.com/library/gemma4
+  - model_name: local-gemma4-12b
+    litellm_params:
+      model: ollama/gemma4:12b
+      api_base: "http://ollama:11434"
+    model_info:
+      supports_function_calling: true
+  # VRAM ~9,5GB
+  - model_name: local-gemma4-e4b
+    litellm_params:
+      model: ollama/gemma4:e4b
+      api_base: "http://ollama:11434"
+    model_info:
+      supports_function_calling: true
+
+  # VRAM ~5,5GB lfm2.5:8b https://ollama.com/library/lfm2.5
+  - model_name: local-lfm2.5
+    litellm_params:
+      model: ollama/lfm2.5:8b
+      api_base: "http://ollama:11434"
+    model_info:
+      supports_function_calling: true
       
 
   # VRAM ~7,3GB 

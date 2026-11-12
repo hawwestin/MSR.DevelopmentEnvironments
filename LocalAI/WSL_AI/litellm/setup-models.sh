@@ -10,7 +10,12 @@ models_12gb=(
   qwen2.5-coder:7b # 28.05.2025
   llama3.1:8b # 30.11.2024
   gemma2:9b # 01.08.2024
+  gemma4:12b # 12.10.2026
+  gemma4:e4b # 12.10.2026
   llama3.2:3b # 25.09.2024
+  nemotron-3.5-bolt:e4b # 23.10.2026
+  lfm2.5:8b # 15.10.2026
+
   # Add more models here
 )
 for model in "${models_12gb[@]}"; do
