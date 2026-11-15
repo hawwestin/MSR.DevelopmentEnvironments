@@ -1,0 +1,8 @@
+---
+- name: Install QEMU guest agent on VMs
+  hosts: vm
+  become: true
+  gather_facts: true
+  serial: 1
+  roles:
+    - qemu_guest_agent

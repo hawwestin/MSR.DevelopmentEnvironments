@@ -1,0 +1,207 @@
+---
+- name: Identify the FreeBSD appliance
+  ansible.builtin.command: cat /etc/platform
+  register: qemu_guest_agent_platform
+  changed_when: false
+  check_mode: false
+
+- name: Require pfSense and root privileges
+  ansible.builtin.assert:
+    that:
+      - qemu_guest_agent_platform.stdout | trim == 'pfSense'
+      - ansible_facts['user_id'] == 'root'
+    fail_msg: This FreeBSD path supports only pfSense and requires root privileges.
+
+- name: Read the pfSense release
+  ansible.builtin.command: cat /etc/version
+  register: qemu_guest_agent_release
+  changed_when: false
+  check_mode: false
+
+- name: Check the named QEMU guest agent channel
+  ansible.builtin.stat:
+    path: /dev/vtcon/org.qemu.guest_agent.0
+  register: qemu_guest_agent_channel
+
+- name: Require the Proxmox guest agent channel
+  ansible.builtin.assert:
+    that:
+      - qemu_guest_agent_channel.stat.exists
+    fail_msg: >-
+      The named virtio-serial channel is missing on pfSense
+      {{ qemu_guest_agent_release.stdout | trim }}. Enable QEMU Guest Agent
+      in Proxmox VM Options and schedule a full stop/start if necessary.
+
+- name: Read the package ABI
+  ansible.builtin.command: pkg config ABI
+  register: qemu_guest_agent_abi
+  changed_when: false
+  check_mode: false
+
+- name: Report the pfSense package target
+  ansible.builtin.debug:
+    msg: >-
+      pfSense {{ qemu_guest_agent_release.stdout | trim }},
+      ABI {{ qemu_guest_agent_abi.stdout | trim }};
+      only the existing pfSense repository will be used.
+
+- name: Check whether QEMU guest agent is installed
+  ansible.builtin.command: pkg info -e qemu-guest-agent
+  register: qemu_guest_agent_installed
+  changed_when: false
+  failed_when: qemu_guest_agent_installed.rc not in [0, 1]
+  check_mode: false
+
+- name: Install a missing agent from the pfSense repository
+  when: qemu_guest_agent_installed.rc == 1
+  environment:
+    LC_ALL: C
+    ASSUME_ALWAYS_YES: "no"
+  block:
+    - name: Refresh only the existing pfSense repository catalog
+      ansible.builtin.command: pkg update -r pfSense
+      changed_when: false
+      when: not ansible_check_mode
+
+    - name: Check exact package availability in the pfSense catalog
+      ansible.builtin.command: pkg rquery -U -r pfSense %n qemu-guest-agent
+      register: qemu_guest_agent_available
+      changed_when: false
+      failed_when: false
+      check_mode: false
+
+    - name: Require a package from the existing pfSense repository
+      ansible.builtin.assert:
+        that:
+          - qemu_guest_agent_available.rc == 0
+          - "'qemu-guest-agent' in qemu_guest_agent_available.stdout_lines"
+        fail_msg: >-
+          qemu-guest-agent is unavailable from the existing pfSense catalog.
+          No external repository will be enabled. In check mode, the catalog
+          must already be populated. Verify availability for this release
+          before approving a different package source.
+
+    - name: Preview the agent installation without changing packages
+      ansible.builtin.command: pkg install -n -U -r pfSense qemu-guest-agent
+      register: qemu_guest_agent_transaction
+      changed_when: false
+      check_mode: false
+
+    - name: Reject changes to existing firewall packages
+      ansible.builtin.assert:
+        that:
+          - >-
+            ((qemu_guest_agent_transaction.stdout ~ '\n' ~
+              qemu_guest_agent_transaction.stderr) |
+             regex_search('(?im)^\s*(?:Installed packages to be (?:UPGRADED|DOWNGRADED|REINSTALLED|REMOVED)|Number of packages to be (?:upgraded|downgraded|reinstalled|removed):\s*[1-9])')) is none
+        fail_msg: >-
+          The proposed agent installation would change existing firewall
+          packages. Review pkg install -n -U -r pfSense qemu-guest-agent
+          manually; this role will not perform that transaction.
+
+    - name: Install QEMU guest agent without a global package upgrade
+      community.general.pkgng:
+        name: qemu-guest-agent
+        state: present
+        pkgsite: pfSense
+        cached: true
+
+- name: Explain fresh-install check mode limitations
+  ansible.builtin.debug:
+    msg: >-
+      Check mode does not install the package, configure startup, or test the
+      service on a fresh guest. Those checks require a normal limited run.
+  when:
+    - ansible_check_mode
+    - qemu_guest_agent_installed.rc == 1
+
+- name: Configure and start the installed pfSense agent
+  when: not ansible_check_mode or qemu_guest_agent_installed.rc == 0
+  block:
+    - name: Read the package-provided service script
+      ansible.builtin.slurp:
+        src: /usr/local/etc/rc.d/qemu-guest-agent
+      register: qemu_guest_agent_rc_script
+
+    - name: Verify the expected package service interface
+      ansible.builtin.assert:
+        that:
+          - "'qemu_guest_agent_enable' in (qemu_guest_agent_rc_script.content | b64decode)"
+          - "'qemu_guest_agent_flags' in (qemu_guest_agent_rc_script.content | b64decode)"
+          - "'load_rc_config' in (qemu_guest_agent_rc_script.content | b64decode)"
+          - "'/usr/local/bin/qemu-ga' in (qemu_guest_agent_rc_script.content | b64decode)"
+        fail_msg: The installed service script differs from the supported interface; review it before configuring startup.
+
+    - name: Check persistent local rc configuration support
+      ansible.builtin.shell: |
+        . /etc/defaults/rc.conf
+        printf '%s\n' "$rc_conf_files"
+      args:
+        executable: /bin/sh
+      register: qemu_guest_agent_rc_files
+      changed_when: false
+      check_mode: false
+
+    - name: Require persistent rc.conf.local settings
+      ansible.builtin.assert:
+        that:
+          - "'/etc/rc.conf.local' in qemu_guest_agent_rc_files.stdout.split()"
+        fail_msg: This appliance does not load rc.conf.local; refusing to edit generated rc.conf or the vendor service script.
+
+    - name: Verify the agent supports virtio-serial options
+      ansible.builtin.command: /usr/local/bin/qemu-ga --help
+      register: qemu_guest_agent_help
+      changed_when: false
+      check_mode: false
+
+    - name: Require the expected agent command-line interface
+      ansible.builtin.assert:
+        that:
+          - "'virtio-serial' in (qemu_guest_agent_help.stdout ~ qemu_guest_agent_help.stderr)"
+          - "'--path' in (qemu_guest_agent_help.stdout ~ qemu_guest_agent_help.stderr)"
+        fail_msg: The installed agent does not expose the expected virtio-serial transport options.
+
+    - name: Persist the guest agent configuration outside generated rc.conf
+      ansible.builtin.blockinfile:
+        path: /etc/rc.conf.local
+        create: true
+        owner: root
+        group: wheel
+        mode: "0644"
+        marker: "# {mark} ANSIBLE QEMU GUEST AGENT"
+        block: |
+          qemu_guest_agent_enable="YES"
+          qemu_guest_agent_flags="-d -m virtio-serial -p /dev/vtcon/org.qemu.guest_agent.0"
+        validate: /bin/sh -n %s
+      notify: Restart pfSense QEMU guest agent
+
+    - name: Install the guarded pfSense startup hook
+      ansible.builtin.copy:
+        src: qemu-guest-agent.sh
+        dest: /usr/local/etc/rc.d/ansible-qemu-guest-agent.sh
+        owner: root
+        group: wheel
+        mode: "0755"
+        validate: /bin/sh -n %s
+
+    - name: Apply changed agent settings before checking service status
+      ansible.builtin.meta: flush_handlers
+
+    - name: Check whether the guest agent is running
+      ansible.builtin.command: service qemu-guest-agent onestatus
+      register: qemu_guest_agent_status
+      changed_when: false
+      failed_when: qemu_guest_agent_status.rc not in [0, 1]
+      check_mode: false
+
+    - name: Start the guest agent if stopped
+      ansible.builtin.command: service qemu-guest-agent onestart
+      changed_when: true
+      when:
+        - not ansible_check_mode
+        - qemu_guest_agent_status.rc == 1
+
+    - name: Verify the guest agent is running
+      ansible.builtin.command: service qemu-guest-agent onestatus
+      changed_when: false
+      when: not ansible_check_mode

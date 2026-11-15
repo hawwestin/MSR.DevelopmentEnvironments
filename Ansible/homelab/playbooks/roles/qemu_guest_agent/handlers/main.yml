@@ -1,0 +1,5 @@
+---
+- name: Restart pfSense QEMU guest agent
+  ansible.builtin.command: service qemu-guest-agent onerestart
+  changed_when: true
+  when: not ansible_check_mode
