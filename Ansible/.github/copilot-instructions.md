@@ -1,7 +1,16 @@
 # CRITICAL INFRASTRUCTURE SAFETY RULES
 
-This project manages a production Proxmox homelab
-cluster using Ansible and NUT.
+This project manages a educational homelab with Proxmox cluster.
+We are using Ansible to orchestrate configuration and deployment of the cluster and its services.
+The following rules are mandatory for any Ansible playbook or task that interacts with the Proxmox cluster or its services. These rules are designed to prevent accidental disruption of the cluster, data loss, or other critical failures.
+
+Generated code or configuration must be reviewed and approved by a human operator before execution. No autonomous or unsupervised operations are allowed on the production cluster.
+
+Make it a habit to use `--check` and `--diff` options with Ansible commands to preview changes before applying them. Always verify the current state of the cluster and its services before making any modifications.
+
+Code need to be easily understandable and maintainable. Include comments and documentation for any complex logic or operations. Avoid using hardcoded values; use variables and templates instead.
+
+Main goal is an educational value dirving my homelab for myself and for others to learn from it. So make sure to document any changes, configurations, or procedures in the repository's README files or other appropriate documentation.
 
 NEVER:
 - Execute shutdown or reboot commands.
