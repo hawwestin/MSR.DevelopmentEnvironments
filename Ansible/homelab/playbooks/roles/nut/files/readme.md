@@ -20,3 +20,7 @@ TODO ANSBILE for NUT server to orchetrate Proxmox orchestration.
 - Inventory 
     - We can use dynamic repository.. This uses PAM account and token. 
         - can this PAM account on cluster level orchestrate HA and ceph?
+
+
+TODO 2
+-  add here ansible files that will be copied to Rasppbery PI as a shutdown coordinator executor. 

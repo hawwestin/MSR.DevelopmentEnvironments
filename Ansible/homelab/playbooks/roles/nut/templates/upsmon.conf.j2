@@ -161,6 +161,14 @@ MINSUPPLIES {{ 0 if nut_test_mode | bool else nut_monitor_minsupplies }}
 
 SHUTDOWNCMD {{ (nut_test_shutdowncmd if nut_test_mode | bool else nut_monitor_shutdowncmd) | to_json }}
 
+# By default, the Secondary may log out of the NUT data server after initiating a local shutdown. 
+# For the Primary, the Secondary's disconnection signals that it can begin its own shutdown.
+# SHUTDOWNEXIT no prevents the Secondary from exiting the monitoring process on its own after 
+# invoking SHUTDOWNCMD. It remains connected until the local shutdown procedure completes or the 
+# process is stopped.
+#
+SHUTDOWNEXIT no
+
 # --------------------------------------------------------------------------
 # NOTIFYCMD <command>
 #

@@ -9,9 +9,9 @@ nut_ups_name: CBSups
 nut_ups_driver: usbhid-ups
 nut_ups_port: auto
 nut_ups_vendor_id: '0764'
-nut_ups_product_id: '0501'
-nut_ups_serial: '000000000000'
-nut_ups_description: CPS CP900EPFCLCD
+nut_ups_product_id: '0601'
+nut_ups_serial: '000000000000' # replaced by vault variable in group_vars/all/vars.yml
+nut_ups_description: CPS CP900EPFCLCD # TODO replace with new description from UPS
 nut_ups_maxretry: 3
 nut_ups_sdorder: -1
 nut_monitor_user: upsmon
@@ -19,6 +19,13 @@ nut_monitor_role: "{{ 'primary' if nut_server | bool else 'secondary' }}"
 nut_monitor_power_value: 1
 nut_monitor_minsupplies: 1
 nut_monitor_shutdowncmd: "/sbin/shutdown -h +0"
+
+# upsmon.conf settings for hostsync and shutdownexit.  These are not used in the templates, but are used in the role main.yml to set the values in upsmon.conf
+nut_monitor_hostsync_primary_seconds: 15
+nut_monitor_hostsync_secondary_seconds: 120
+nut_monitor_shutdownexit_primary: "yes"
+nut_monitor_shutdownexit_secondary: "no"
+
 nut_test_mode: false
 nut_test_shutdowncmd: "/usr/bin/logger -t nut-test 'SHUTDOWNCMD invoked; shutdown suppressed'"
 # TODO confirm this path is OK

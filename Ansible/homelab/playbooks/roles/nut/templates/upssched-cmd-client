@@ -67,6 +67,8 @@ case "$1" in
         ;;
     onbatt)
         log_event "UPS on battery. status=$STATUS runtime=${RUNTIME}s load=${LOAD}%"
+        # Here we can implement a cluster coordination mechanism to determine HA disarmament and Ceph maintenacne mode.
+        # no.5 point in todo list
         ;;
     lowbatt)
         log_event "Low-battery notification received. status=$STATUS runtime=${RUNTIME}s load=${LOAD}%"
