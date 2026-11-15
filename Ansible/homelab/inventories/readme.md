@@ -23,6 +23,7 @@ ansible -a "hostname" new
 ```bash
 eval "$(ssh-agent -s)"
 ssh-add ~/.ssh/id_rsa_windows
+ssh-add ~/.ssh/id_ansible
 ssh-add -l
 ```
 

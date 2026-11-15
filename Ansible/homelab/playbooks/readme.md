@@ -33,6 +33,10 @@ ansible-playbook Ansible/homelab/playbooks/docker_install.yml --syntax-check
 
 
 ansible-playbook -i Ansible/homelab/inventories/hosts.ini Ansible/homelab/playbooks/nut.yml --limit opti3040 --check
+
+ansible-playbook Ansible/homelab/playbooks/validate-ansible-access.yml --limit new --check
+ansible-playbook Ansible/homelab/playbooks/validate-ansible-access.yml --limit new -e automation_validation_hosts=new 
+
 ```
 
 nut backup
