@@ -5,8 +5,9 @@
   gather_facts: true
 
   vars:
-    docker_data_root: /mnt/docker-data/docker
-    containerd_data_root: /mnt/docker-data/containerd
+    data_root_mount_point: /mnt/docker-data
+    docker_data_root: "{{ data_root_mount_point }}/docker"
+    containerd_data_root: "{{ data_root_mount_point }}/containerd"
 
     # Set to true after you confirm everything works (docker ps, etc.)
     remove_old_backups: false
@@ -20,12 +21,12 @@
   tasks:
     - name: Verify new mount exists
       ansible.builtin.stat:
-        path: /mnt/docker-data
+        path: "{{ data_root_mount_point }}"
       register: dockerdata_mount
 
-    - name: Fail if /mnt/docker-data does not exist
+    - name: Fail if {{ data_root_mount_point }} does not exist
       ansible.builtin.fail:
-        msg: "/mnt/docker-data does not exist. Mount the disk/volume first (e.g. via fstab/LXC mount) and rerun."
+        msg: "{{ data_root_mount_point }} does not exist. Mount the disk/volume first (e.g. via fstab/LXC mount) and rerun."
       when: not dockerdata_mount.stat.exists
 
     - name: Ensure docker data-root directory exists
