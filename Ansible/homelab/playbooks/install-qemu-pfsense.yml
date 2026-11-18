@@ -1,0 +1,19 @@
+---
+- name: Install and enable QEMU Guest Agent on pfSense
+  hosts: pfsense
+  gather_facts: false
+
+  tasks:
+    - name: Install qemu-guest-agent package via pkg
+      ansible.builtin.raw: pkg install -y qemu-guest-agent
+      register: pkg_install
+      changed_when: "'New packages to be INSTALLED' in pkg_install.stdout"
+
+    - name: Enable qemu_guest_agent in rc.conf.local
+      ansible.builtin.raw: |
+        grep -q 'qemu_guest_agent_enable="YES"' /etc/rc.conf.local 2>/dev/null || echo 'qemu_guest_agent_enable="YES"' >> /etc/rc.conf.local
+      changed_when: false
+
+    - name: Start qemu-guest-agent service
+      ansible.builtin.raw: service qemu-guest-agent start || service qemu-guest-agent restart
+      changed_when: false

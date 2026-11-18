@@ -190,12 +190,12 @@ def main():
     )
     argument_parser.add_argument(
         # Add new groups here as needed. The default group is "new" for hosts that are not yet trusted.
-        '--group', choices=['proxmox', 'new'],
+        '--group', 
         default='new',
     )
     argument_parser.add_argument(
         '--inventory', type=Path,
-        default=Path(__file__).resolve().parent / '..' / 'homelab' / 'inventory' / 'hosts.ini',
+        default=Path(__file__).resolve().parent / 'inventories' / 'inventory.ini',
     )
     argument_parser.add_argument(
         '--known-hosts', type=Path,

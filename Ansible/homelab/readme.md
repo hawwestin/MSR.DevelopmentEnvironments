@@ -6,6 +6,15 @@ By default it looks for them under playbooks directory.
 ```bash
 export ANSIBLE_CONFIG=$PWD/Ansible/homelab/ansible.cfg
 export ANSIBLE_VAULT_PASSWORD_FILE=~/.ansible/vault-password
+export ANSIBLE_PRIVATE_KEY_FILE="~/.ssh/id_rsa_windows"
+```
+
+```bash
+ansible --list-hosts new
+
+ansible new -m ping
+
+ansible -a "hostname" new
 ```
 
 
