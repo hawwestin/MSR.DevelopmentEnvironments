@@ -17,6 +17,8 @@ ansible --list-hosts new
 ansible new -m ping
 
 ansible -a "hostname" new
+
+ansible-inventory --host 192.168.50.1 
 ```
 
 # use  ssh-agent
