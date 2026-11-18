@@ -15,7 +15,7 @@ configuration, or network settings, and never reboots guests.
 ### Connection prerequisites
 
 Debian guests must already have the automation account provisioned. The `VM`
-group inherits the `ansible` SSH user and sudo from `???`.
+group inherits the `ansible_mgr` SSH user and sudo with password.
 
 For pfSense, enable SSH only from trusted management networks, configure key
 authentication and root-capable access, and verify a compatible Python
@@ -65,10 +65,11 @@ SSH key as described above. Validate syntax and try one VM before the group:
 
 ```bash
 export ANSIBLE_CONFIG=./ansible.cfg
-ansible-galaxy collection install -r requirements.yml
-ansible-playbook playbooks/install-qemu-guest-agent.yml --syntax-check
-ansible-playbook playbooks/install-qemu-guest-agent.yml --list-hosts
-ansible-playbook playbooks/install-qemu-guest-agent.yml --limit exampleVM 
+ansible-galaxy collection install -r Ansible/homelab/requirements.yml
+ansible-playbook Ansible/homelab/playbooks/install-qemu-guest-agent.yml --syntax-check
+ansible-playbook Ansible/homelab/playbooks/install-qemu-guest-agent.yml --list-hosts
+ansible-playbook Ansible/homelab/playbooks/install-qemu-guest-agent.yml --check --diff
+ansible-playbook Ansible/homelab/playbooks/install-qemu-guest-agent.yml --limit VM 
 ```
 
 If the configured YAML callback is unavailable, first run
@@ -78,6 +79,7 @@ After verifying the trial VM, apply to the full `VM` group:
 ```bash
 ansible-playbook playbooks/install-qemu-guest-agent.yml
 ```
+
 
 On the guest, verify with `systemctl is-active qemu-guest-agent` and
 `systemctl is-enabled qemu-guest-agent`. Repeating the playbook leaves an
@@ -97,8 +99,9 @@ services, or create startup files. A fresh guest requires an existing catalog
 to preview installation, and skips configuration/service checks until the
 package is installed. It is not proof of successful deployment.
 
+Verify on pfsense ssh sesasion `sudo service qemu-guest-agent status`. 
 On pfSense, verify `pkg info qemu-guest-agent` and
-`service qemu-guest-agent onestatus`. On its Proxmox node, verify
+`sudo service qemu-guest-agent onestatus`. On its Proxmox node, verify
 `qm agent <vmid> ping`. Run the limited playbook again and expect no unnecessary
 package, configuration, or service changes. Repeat the startup hook with
 `/usr/local/etc/rc.d/ansible-qemu-guest-agent.sh start` and confirm there is

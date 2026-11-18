@@ -25,8 +25,16 @@ ansible-playbook Ansible/homelab/playbooks/bootstrap_ansible_mgr.yml --list-host
 ansible-playbook Ansible/homelab/playbooks/bootstrap_ansible_mgr.yml
 ```
 
+Verification
+```bash
+ansible-playbook Ansible/homelab/playbooks/validate-ansible-access-passwordless.yml --limit new --check
+ansible-playbook Ansible/homelab/playbooks/validate-ansible-access-passwordless.yml --limit new -e automation_validation_hosts=new 
+# password
+ansible-playbook Ansible/homelab/playbooks/validate-ansible-access-password.yml --limit pfsense -e automation_validation_hosts=vm
+```
 
-Other plays
+
+Application release plays
 ```bash
 ansible-playbook Ansible/homelab/playbooks/ha_otbr.yml --syntax-check
 ansible-playbook Ansible/homelab/playbooks/docker_install.yml --syntax-check
@@ -34,11 +42,6 @@ ansible-playbook Ansible/homelab/playbooks/docker_install.yml --syntax-check
 
 ansible-playbook -i Ansible/homelab/inventories/hosts.ini Ansible/homelab/playbooks/nut.yml --limit opti3040 --check
 
-ansible-playbook Ansible/homelab/playbooks/validate-ansible-access-passwordless.yml --limit new --check
-ansible-playbook Ansible/homelab/playbooks/validate-ansible-access-passwordless.yml --limit new -e automation_validation_hosts=new 
-
-# password
-ansible-playbook Ansible/homelab/playbooks/validate-ansible-access-password.yml --limit pfsense -e automation_validation_hosts=vm
 
 ```
 

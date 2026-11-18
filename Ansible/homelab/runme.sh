@@ -1,12 +1,11 @@
 #! /bin/bash
 # This script is used to run the ansible playbook for the homelab environment.
-
 # bash /mnt/c/repos/MSR.DevelopmentEnvironments/Ansible/homelab/runme.sh
 
 cd '/mnt/c/repos/MSR.DevelopmentEnvironments'
 
 source Ansible/homelab/.env
-ansible-galaxy collection install -r requirements.yml
+ansible-galaxy collection install -r Ansible/homelab/requirements.yml
 
 # ssh keys
 eval "$(ssh-agent -s)"

@@ -1,5 +1,8 @@
 ansible_port: "{{ ansible_port | default(22) }}"
 ansible_user: "ansible_mgr"
 ansible_become_pass: "{{ vault_pfsense_become_pass }}"
+ansible_become_method: sudo
+ansible_shell_type: sh
+ansible_shell_executable: /bin/sh
 # check what python version is installed on the target host and set the interpreter accordingly ls -l /usr/local/bin/python*
 ansible_python_interpreter: /usr/local/bin/python3.11
