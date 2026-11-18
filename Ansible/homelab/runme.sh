@@ -1,7 +1,7 @@
 #! /bin/bash
 # This script is used to run the ansible playbook for the homelab environment.
 
-cd '/mnt/c/repos/MSR.DevelopmentEnvironments/Ansible'
+cd '/mnt/c/repos/MSR.DevelopmentEnvironments'
 
 source Ansible/homelab/.env
 ansible-galaxy collection install -r requirements.yml
@@ -12,7 +12,7 @@ ssh-add "$ANSIBLE_PRIVATE_KEY_FILE"
 ssh-add -l
 
 # Run ansible ping to test connectivity to sample hosts
-ansible all -m ping
+ansible new -m ping
 
 ansible-playbook Ansible/homelab/playbooks/validate-ansible-access.yml --limit new -e automation_validation_hosts=new 
 
