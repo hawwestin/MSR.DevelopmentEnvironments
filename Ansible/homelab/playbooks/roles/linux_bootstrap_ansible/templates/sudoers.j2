@@ -1,0 +1,6 @@
+# This grant all might sudo power. Be aware of responsiblity
+{% if bootstrap_user.sudo | default(false) | bool %}
+{{ bootstrap_user.name }} ALL=(ALL:ALL) NOPASSWD: ALL
+{% elif bootstrap_user.sudo_commands | default([]) | length > 0 %}
+{{ bootstrap_user.name }} ALL=(ALL:ALL) NOPASSWD: {{ bootstrap_user.sudo_commands | join(', ') }}
+{% endif %}

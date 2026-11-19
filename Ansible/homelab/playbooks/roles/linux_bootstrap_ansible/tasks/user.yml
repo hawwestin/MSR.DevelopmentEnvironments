@@ -1,0 +1,19 @@
+---
+- name: Create the automation account
+  ansible.builtin.user:
+    name: "{{ bootstrap_user.name }}"
+    group: "{{ bootstrap_user.name }}"
+    shell: /bin/bash
+    create_home: true
+    state: present
+
+- name: Install this user's approved public keys
+  ansible.posix.authorized_key:
+    user: "{{ bootstrap_user.name }}"
+    key: "{{ operator_key }}"
+    state: present
+    manage_dir: true
+    exclusive: false
+  loop: "{{ bootstrap_user.authorized_keys }}"
+  loop_control:
+    loop_var: operator_key

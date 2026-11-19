@@ -7,3 +7,13 @@
 ansible_become_password: "{{ vault_ansible_mgr_password }}"
 ansible_password: "{{ vault_ansible_mgr_password }}"
 ansible_ssh_authentication_method: password
+
+
+public_bootstrap_authorized_keys:
+  - "{{ lookup('file', '~/.ssh/id_ansible.pub') }}"
+
+  
+ansible_mgr_keys:
+  - "{{ lookup('file', '~/.ssh/id_ansible.pub') }}" #TODO change me later
+ansible_nut_keys:
+  - "{{ lookup('file', '~/.ssh/id_ansible.pub') }}" #TODO change me later

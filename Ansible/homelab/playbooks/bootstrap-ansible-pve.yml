@@ -1,0 +1,44 @@
+---
+- name: Bootstrap the automation account using root SSH on Proxmox hosts
+  hosts: proxmox
+  gather_facts: false
+  serial: 1
+  any_errors_fatal: true
+  vars:
+    ansible_user: root
+    ansible_password: "{{ vault_bootstrap_root_password | default('') }}"
+    ansible_ssh_private_key_file: ~/.ssh/id_rsa_windows
+    ansible_become: false
+    ansible_host_key_checking: true
+    ansible_ssh_args: >-
+      -o ControlMaster=no -o ControlPath=none -o StrictHostKeyChecking=yes
+      -o PreferredAuthentications=password,keyboard-interactive
+      -o PubkeyAuthentication=no
+  pre_tasks:
+    - name: Require the encrypted bootstrap password
+      ansible.builtin.assert:
+        that:
+          - vault_bootstrap_root_password is defined
+          - vault_bootstrap_root_password is string
+          - vault_bootstrap_root_password | length > 0
+        fail_msg: Set vault_bootstrap_root_password in the bootstrap Vault file.
+      no_log: true
+  roles:
+    - role: linux_bootstrap_ansible
+      vars:
+        linux_bootstrap_verify_sudo: true
+        linux_bootstrap_prepare_debian: false
+        linux_bootstrap_users:
+          - name: ansible_mgr
+            authorized_keys: "{{ ansible_mgr_keys }}"
+            sudo: true
+          - name: ansible_nut
+            authorized_keys: "{{ ansible_nut_keys }}"
+            sudo_commands:
+              - /usr/local/sbin/nut-pve-control
+
+- name: Verify the provisioned automation account
+  ansible.builtin.import_playbook: validate-ansible-access-passwordless.yml
+  vars:
+    automation_validation_hosts: proxmox
+    automation_expected_user: ansible_mgr
