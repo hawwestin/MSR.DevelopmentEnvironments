@@ -30,20 +30,6 @@ ssh-add ~/.ssh/id_pfsense # TODO
 ssh-add -l
 ```
 
-# SSH manual snippets
-
-## known hosts
-```bash
-ssh-keyscan -H 192.168.100.14 >> ~/.ssh/known_hosts
-ssh-keyscan -p 22 -H 192.168.50.1 >> ~/.ssh/known_hosts
-```
-## send keys
-```bash
-ssh-copy-id -i ~/.ssh/id_ansible.pub ansible_mgr@192.168.100.100
-ssh-copy-id -i ~/.ssh/id_rsa_windows.pub root@192.168.50.6
-```
-
-
 # host setup
 ```bash
 ansible new -m setup
