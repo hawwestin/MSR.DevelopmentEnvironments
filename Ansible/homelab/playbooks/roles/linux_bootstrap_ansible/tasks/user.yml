@@ -1,4 +1,9 @@
 ---
+- name: Create the automation group
+  ansible.builtin.group:
+    name: "{{ bootstrap_user.name }}"
+    state: present
+
 - name: Create the automation account
   ansible.builtin.user:
     name: "{{ bootstrap_user.name }}"
