@@ -23,14 +23,12 @@ export ANSIBLE_VAULT_PASSWORD_FILE=~/.ansible/vault-password
 ```bash
 # Encrypt both files
 ansible-vault encrypt Ansible/homelab/inventories/group_vars/new/vault.yml 
-ansible-vault encrypt Ansible/homelab/inventories/group_vars/vm_linux/vault.yml 
 ansible-vault encrypt Ansible/homelab/inventories/group_vars/pfsense/vault.yml 
 # and so on
 
 # Edit to set the actual password
 ansible-vault edit Ansible/homelab/inventories/group_vars/new/vault.yml --vault-password-file ~/.ansible/vault-password
 ansible-vault edit Ansible/homelab/inventories/group_vars/lxc/vault.yml --vault-password-file ~/.ansible/vault-password
-ansible-vault edit Ansible/homelab/inventories/group_vars/vm_linux/vault.yml --vault-password-file ~/.ansible/vault-password
 ansible-vault edit Ansible/homelab/inventories/group_vars/pfsense/vault.yml --vault-password-file ~/.ansible/vault-password
 ```
 
@@ -41,7 +39,7 @@ ansible-vault edit Ansible/homelab/inventories/group_vars/pfsense/vault.yml --va
 export ANSIBLE_VAULT_PASSWORD_FILE=~/.ansible/vault-password
 
 # Now run commands without -K flag
-ANSIBLE_CONFIG=Ansible/homelab/ansible.cfg ansible -i Ansible/homelab/inventories/inventory.ini vm_linux -m ping
+ANSIBLE_CONFIG=Ansible/homelab/ansible.cfg ansible -i Ansible/homelab/inventories/inventory.ini lxc -m ping
 ANSIBLE_CONFIG=Ansible/homelab/ansible.cfg ansible-playbook -i Ansible/homelab/inventories/inventory.ini Ansible/homelab/playbooks/bootstrap_ansible_mgr.yml
 ```
 

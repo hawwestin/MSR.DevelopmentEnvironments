@@ -1,4 +1,5 @@
 ---
+#  Legacy bootstrap playbook for ansible_mgr user. This playbook is used to bootstrap the ansible_mgr account on new hosts.
 - name: Bootstrap ansible_mgr account on remote hosts
   hosts: new
   remote_user: root
