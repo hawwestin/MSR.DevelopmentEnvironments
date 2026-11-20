@@ -1,7 +1,7 @@
 ---
 # ansible-playbook Ansible/homelab/playbooks/bootstrap_lxc_ansible_mgr.yml --limit "opti3040"
 - name: Bootstrap new LXC container
-  hosts: proxmox # proxmox host, not the container
+  hosts: proxmox # proxmox host, not the container. Limit to the proxmox host that will host the new LXC container.
   gather_facts: false
   roles:
     - role: lxc_bootstrap

@@ -1,0 +1,88 @@
+---
+
+- name: Preflight checks for each automation user keys
+  ansible.builtin.include_tasks: auth_keys.yml
+  loop: "{{ linux_bootstrap_users }}"
+  loop_control:
+    loop_var: bootstrap_user
+    label: "{{ bootstrap_user.name }}"
+  tags: [bootstrap_preflight]
+
+
+- name: Verify the initial bootstrap user can escalate before account changes
+  when: linux_bootstrap_verify_sudo
+  block:
+    - name: Check initial root privileges using the selected escalation method
+      ansible.builtin.command:
+        argv: [id, -u]
+      vars:
+        ansible_become: true
+      register: initial_sudo
+      changed_when: false
+      check_mode: false
+      no_log: true
+
+    - name: Require initial root privileges
+      ansible.builtin.assert:
+        that:
+          - initial_sudo.stdout == '0'
+        fail_msg: The initial bootstrap user must have working access to root using the selected escalation method.
+      no_log: true
+
+- name: Gather operating system facts without privilege escalation
+  ansible.builtin.setup:
+    gather_subset: [min]
+  vars:
+    ansible_become: false
+
+- name: Require a supported Linux distribution
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.os_family in ['Debian', 'RedHat']
+      - ansible_facts.os_family != 'RedHat' or ansible_facts.distribution_major_version | int >= 8
+    fail_msg: This role supports Debian/Ubuntu and modern dnf-based Red Hat family hosts (version 8+).
+
+- name: Install sudo on Debian family hosts
+  ansible.builtin.apt:
+    name: sudo
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  when: ansible_facts.os_family == 'Debian'
+
+- name: Install sudo on Red Hat family hosts
+  ansible.builtin.dnf:
+    name: sudo
+    state: present
+  when: ansible_facts.os_family == 'RedHat'
+
+- name: Configure each automation user
+  ansible.builtin.include_tasks: user.yml
+  loop: "{{ linux_bootstrap_users }}"
+  loop_control:
+    loop_var: bootstrap_user
+    label: "{{ bootstrap_user.name }}"
+
+- name: Ensure sudo policy directory exists
+  ansible.builtin.file:
+    path: /etc/sudoers.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0750'
+
+- name: Install validated automation sudo policy
+  ansible.builtin.template:
+    src: sudoers.j2
+    dest: "/etc/sudoers.d/{{ bootstrap_user.name }}"
+    owner: root
+    group: root
+    mode: '0440'
+    validate: /usr/sbin/visudo -cf %s
+  loop: "{{ linux_bootstrap_users }}"
+  when: >-
+    (bootstrap_user.sudo | default(false) | bool) or
+    (bootstrap_user.sudo_commands | default([]) | length > 0)
+  loop_control:
+    loop_var: bootstrap_user
+    label: "{{ bootstrap_user.name }}"

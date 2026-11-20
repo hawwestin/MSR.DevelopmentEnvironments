@@ -1,5 +1,14 @@
+# access 
+default_ansible_become_pass: "{{ vault_default_become_pass }}"
+
 # Reference Variables to vault variables
 nut_monitor_password: "{{ vault_nut_monitor_password }}"
 nut_admin_password: "{{ vault_nut_admin_password }}"
 nut_qnap_admin_password: "{{ vault_nut_qnap_admin_password }}"
 nut_ups_serial: "{{ vault_nut_ups_serial }}" # todo add to vault
+
+
+ansible_mgr_keys:
+  - "{{ lookup('file', '~/.ssh/id_ansible.pub') }}"
+ansible_nut_keys:
+  - "{{ lookup('file', '~/.ssh/id_ansible_nut.pub') }}"

@@ -24,10 +24,9 @@
         fail_msg: Set vault_bootstrap_root_password in the bootstrap Vault file.
       no_log: true
   roles:
-    - role: linux_bootstrap_ansible
+    - role: linux_bootstrap_ansible_accounts
       vars:
         linux_bootstrap_verify_sudo: true
-        linux_bootstrap_prepare_debian: false
         linux_bootstrap_users:
           - name: ansible_mgr
             authorized_keys: "{{ ansible_mgr_keys }}"

@@ -1,0 +1,40 @@
+---
+- name: Require approved operator public keys
+  ansible.builtin.assert:
+    that:
+      - bootstrap_user.authorized_keys is sequence
+      - bootstrap_user.authorized_keys is not string
+      - bootstrap_user.authorized_keys is not mapping
+      - bootstrap_user.authorized_keys | length > 0
+    fail_msg: Configure bootstrap_user.authorized_keys with approved SSH public keys before bootstrap.
+  tags: [bootstrap_preflight]
+
+- name: Require individual public key strings
+  ansible.builtin.assert:
+    that:
+      - operator_key is string
+      - operator_key is match('^(ssh-ed25519|ssh-rsa|ecdsa-sha2-nistp(256|384|521)|sk-ssh-ed25519@openssh.com|sk-ecdsa-sha2-nistp256@openssh.com) [A-Za-z0-9+/]+={0,2}( [^\r\n]*)?$')
+    fail_msg: Each approved entry must contain exactly one OpenSSH public key, never a private key.
+  loop: "{{ bootstrap_user.authorized_keys }}"
+  loop_control:
+    loop_var: operator_key
+    label: approved operator key
+  no_log: true
+  tags: [bootstrap_preflight]
+
+- name: Validate public keys with the controller SSH tools
+  ansible.builtin.command:
+    argv: [ssh-keygen, -l, -f, /dev/stdin]
+    stdin: "{{ operator_key }}"
+  delegate_to: localhost
+  become: false
+  vars:
+    ansible_become: false
+  loop: "{{ bootstrap_user.authorized_keys }}"
+  loop_control:
+    loop_var: operator_key
+    label: approved operator key
+  changed_when: false
+  check_mode: false
+  no_log: true
+  tags: [bootstrap_preflight]

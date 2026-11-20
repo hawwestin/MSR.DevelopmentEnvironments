@@ -1,0 +1,6 @@
+---
+linux_bootstrap_verify_sudo: false
+linux_bootstrap_users: 
+  - name: ansible_mgr
+    authorized_keys: "{{ ansible_mgr_keys }}"
+    sudo: true

@@ -1,1 +1,1 @@
-# vault_bootstrap_root_password: 
+# vault_bootstrap_root_password: Different per host, set in the vault.yml file for each host. This is the root password for the initial bootstrap of the ansible_mgr user.
