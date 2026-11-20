@@ -1,3 +1,10 @@
+# issue
+By Default rocky linux does not have SSHD enabled and condifured. 
+This is a manual commands run book. that later was transformed to role that use proxmox pct commands
+
+TODO 
+-  use proxmox dynamic inventory to automate lxc discovery within cluster. 
+
 ## Rocky linux prep
 Create user for ansible
 ```bash

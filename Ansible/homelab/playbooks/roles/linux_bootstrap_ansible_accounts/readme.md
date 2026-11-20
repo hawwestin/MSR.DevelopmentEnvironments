@@ -7,6 +7,6 @@ ansible-playbook Ansible/homelab/playbooks/bootstrap-ansible-pve.yml --syntax-ch
 ansible-playbook Ansible/homelab/playbooks/bootstrap-ansible-pve.yml --tags bootstrap_preflight --limit opti3040 
 
 ansible-playbook Ansible/homelab/playbooks/bootstrap-ansible-pve.yml --check --limit opti3040  --diff
-ansible-playbook Ansible/homelab/playbooks/bootstrap-ansible-pve.yml --limit opti3040 --diff
+ansible-playbook Ansible/homelab/playbooks/bootstrap-ansible-pve.yml  --diff --limit opti3040
 
 ```

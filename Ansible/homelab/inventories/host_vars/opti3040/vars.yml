@@ -1,0 +1,1 @@
+default_ansible_become_pass: "{{ vault_bootstrap_root_password }}"
