@@ -2,7 +2,7 @@ model_list:
   # Models for RTX 3060 12GB
   # VRAM = Parameters Count * ~0,65GB + Context ~1,5GB
   # VRAM ~6,0GB
-  - model_name: local-qwen2.5-coder-7b
+  - model_name: local-qwen2.5-coder-7b # local-coding
     litellm_params:
       model: ollama/qwen2.5-coder:7b
       api_base: "http://ollama:11434"
@@ -10,7 +10,7 @@ model_list:
       supports_function_calling: true
 
   # VRAM ~6,7GB
-  - model_name: local-llama3.1-8b
+  - model_name: local-llama3.1-8b # Local Coding
     litellm_params:
       model: ollama/llama3.1:8b
       api_base: "http://ollama:11434"
@@ -33,7 +33,7 @@ model_list:
     model_info:
       supports_function_calling: true
   # VRAM ~9,5GB
-  - model_name: local-gemma4-e4b
+  - model_name: local-gemma4-e4b # local-general
     litellm_params:
       model: ollama/gemma4:e4b
       api_base: "http://ollama:11434"
@@ -80,28 +80,28 @@ model_list:
     model_info:
       supports_function_calling: true
 
-  - model_name: local-qwen2.5-coder-1.5b
+  - model_name: local-qwen2.5-coder-1.5b # local-light auto-complete
     litellm_params:
       model: ollama/qwen2.5-coder:1.5b
       api_base: "http://ollama:11434"
     model_info:
       supports_function_calling: true
 
-  - model_name: local-nomic-embed-text
+  - model_name: local-nomic-embed-text # local-embed
     litellm_params:
       model: ollama/nomic-embed-text:latest
       api_base: "http://ollama:11434"
     model_info:
       supports_function_calling: true
-
-  - model_name: local-nomic-embed-text-v2-moe
+ 
+  - model_name: local-nomic-embed-text-v2-moe # local-embed
     litellm_params:
       model: ollama/nomic-embed-text-v2-moe:latest
       api_base: "http://ollama:11434"
     model_info:
       supports_function_calling: true
 
-  - model_name: local-llama3.2-1b
+  - model_name: local-llama3.2-1b # local-general
     litellm_params:
       model: ollama/llama3.2:1b
       api_base: "http://ollama:11434"

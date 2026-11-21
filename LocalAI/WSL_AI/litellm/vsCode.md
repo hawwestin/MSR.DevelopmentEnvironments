@@ -2,23 +2,45 @@
 Connect Local Models via LiteLLM to VS code to improve local development expirience. 
 https://marketplace.visualstudio.com/items?itemName=Continue.continue 
 Example config for `Continue - Codestral, Claude, and more` Plugin
-```json
-"models": [
-  {
-    "title": "LiteLLM - Qwen 7B",
-    "provider": "openai",
-    "model": "local-qwen2.5-coder-7b",
-    "apiKey": "sk-1234",
-    "apiBase": "http://localhost:4000/v1"
-  }
-],
-"tabAutocompleteModel": {
-  "title": "LiteLLM - Autocomplete",
-  "provider": "openai",
-  "model": "local-qwen2.5-coder-7b",
-  "apiKey": "sk-1234",
-  "apiBase": "http://localhost:4000/v1"
-}
+```yaml
+name: Local AI
+version: 0.0.1
+schema: v1
+
+models:
+  - name: Local Coding
+    provider: openai
+    model: local-qwen2.5-coder-7b
+    apiBase: http://localhost:4000/v1
+    apiKey: YOUR_LITELLM_KEY
+    roles:
+      - chat
+      - edit
+      - apply
+
+  - name: Local General
+    provider: openai
+    model: local-gemma4-e4b
+    apiBase: http://localhost:4000/v1
+    apiKey: YOUR_LITELLM_KEY
+    roles:
+      - chat
+
+  - name: Local Autocomplete
+    provider: openai
+    model: local-qwen2.5-coder-1.5b
+    apiBase: http://localhost:4000/v1
+    apiKey: YOUR_LITELLM_KEY
+    roles:
+      - autocomplete
+      
+  - name: Nomic Embed
+    provider: openai
+    model: nomic-embed-text:latest
+    apiBase: http://localhost:4000/v1
+    apiKey: YOUR_LITELLM_KEY
+    roles:
+      - embed
 ```
 
 # official vs code extension from liteLLm

@@ -6,7 +6,6 @@ services:
     env_file:
       - .env.local
     environment:
-      - OLLAMA_BASE_URL=http://ollama:11434
       - OPENAI_API_BASE_URL=http://litellm:4000/v1
       - OPENAI_API_KEY=${LITELLM_OPENWEBUI_KEY:-${LITELLM_MASTER_KEY:?Set LITELLM_MASTER_KEY in .env.local}}
     ports:
