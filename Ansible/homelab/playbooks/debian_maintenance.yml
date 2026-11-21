@@ -1,0 +1,38 @@
+---
+- name: Perform routine maintenance on Debian hosts
+  hosts: all
+  become: true
+  vars:
+    # List the services you want to monitor for health checks
+    services_to_check:
+      - ssh
+      - docker
+
+  tasks:
+    - name: Update apt cache and upgrade all packages
+      apt:
+        update_cache: yes
+        upgrade: dist
+        cache_valid_time: 3600
+
+    - name: Remove unnecessary packages (autoremove)
+      apt:
+        autoremove: yes
+        autoclean: yes
+
+    - name: Perform systemd health checks
+      block:
+        - name: Check if services are active
+          systemd:
+            name: "{{ item }}"
+            state: started
+          register: service_status
+          ignore_errors: yes
+          loop: "{{ services_to_check }}"
+
+        - name: Report unhealthy services
+          debug:
+            msg: "CRITICAL: Service {{ item.item }} is NOT running or failed to start!"
+          when: 
+            - item.failed 
+            - item.item != 'mysql' # Example: ignore a specific service if needed
