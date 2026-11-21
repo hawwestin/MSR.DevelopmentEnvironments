@@ -1,6 +1,6 @@
 # General
 Connect Local Models via LiteLLM to VS code to improve local development expirience. 
-
+https://marketplace.visualstudio.com/items?itemName=Continue.continue 
 Example config for `Continue - Codestral, Claude, and more` Plugin
 ```json
 "models": [

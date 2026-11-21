@@ -23,7 +23,13 @@ for model in "${models_12gb[@]}"; do
 done
 
 # Models for 4GB VRAM
-models_4gb=(qwen2.5:1.5b llama3.2:1b)
+models_4gb=(
+  qwen2.5-coder:1.5b
+  nomic-embed-text:latest # 21.02.2024
+  nomic-embed-text-v2-moe:latest #10.12.2025
+  qwen2.5:1.5b 
+  llama3.2:1b
+  )
 for model in "${models_4gb[@]}"; do
   docker compose exec -T ollama ollama pull "$model"
 done
