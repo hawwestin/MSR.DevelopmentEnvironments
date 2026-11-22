@@ -31,6 +31,16 @@ ansible-playbook Ansible/homelab/playbooks/validate-ansible-access-passwordless.
 ansible-playbook Ansible/homelab/playbooks/validate-ansible-access-passwordless.yml --limit new \
 -e automation_validation_hosts=new \
 -e automation_expected_user=ansible_mgr
+
+ansible-playbook Ansible/homelab/playbooks/validate-ansible-access-passwordless.yml --limit opti3040 \
+-e automation_validation_hosts=proxmox \
+-e automation_expected_user=ansible_mgr
+
+ansible-playbook Ansible/homelab/playbooks/validate-ansible-access-passwordless.yml --limit opti3040 \
+-e automation_validation_hosts=proxmox \
+-e automation_expected_user=ansible_nut \
+-e automation_expected_user_ssh_key=$HOME/.ssh/id_ansible_nut \
+-e bootstrap_user_sudo=false
 # password
 ansible-playbook Ansible/homelab/playbooks/validate-ansible-access-password.yml --limit pfsense -e automation_validation_hosts=vm
 ```

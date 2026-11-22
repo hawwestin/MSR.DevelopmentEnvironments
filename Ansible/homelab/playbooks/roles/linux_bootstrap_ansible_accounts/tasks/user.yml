@@ -22,3 +22,14 @@
   loop: "{{ bootstrap_user.authorized_keys }}"
   loop_control:
     loop_var: operator_key
+
+- name: Remove this user's old public keys
+  ansible.posix.authorized_key:
+    user: "{{ bootstrap_user.name }}"
+    key: "{{ operator_key }}"
+    state: absent
+    manage_dir: true
+    exclusive: false
+  loop: "{{ bootstrap_user.oldauthorized_keys }}"
+  loop_control:
+    loop_var: operator_key

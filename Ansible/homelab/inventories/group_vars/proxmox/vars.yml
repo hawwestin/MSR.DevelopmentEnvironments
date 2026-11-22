@@ -5,6 +5,11 @@
 # such passphrase protected keys can be used for the ansible_nut user.
 # For now we will use the same keys for both users.
 ansible_mgr_keys:
-  - "{{ lookup('file', '~/.ssh/id_ansible.pub') }}" 
+  - "{{ lookup('file', '~/.ssh/id_rsa_windows.pub') }}" 
+oldansible_mgr_keys:
+  - "{{ lookup('file', '~/.ssh/id_ansible.pub') }}"
+
 ansible_nut_keys:
   - "{{ lookup('file', '~/.ssh/id_ansible_nut.pub') }}" 
+oldansible_nut_keys:
+  - "{{ lookup('file', '~/.ssh/id_ansible.pub') }}" 

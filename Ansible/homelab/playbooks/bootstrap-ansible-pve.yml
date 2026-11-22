@@ -6,6 +6,7 @@
   any_errors_fatal: true
   vars:
     ansible_user: root
+    # TODO we should use ssh-key based authentication for root, but for now we will use the default_ansible_become_pass from the vault file.
     ansible_password: "{{ default_ansible_become_pass | default('') }}"
     ansible_ssh_private_key_file: ~/.ssh/id_rsa_windows
     ansible_become: false
@@ -30,14 +31,26 @@
         linux_bootstrap_users:
           - name: ansible_mgr
             authorized_keys: "{{ ansible_mgr_keys }}"
+            oldauthorized_keys: "{{ oldansible_mgr_keys }}"
             sudo: true
           - name: ansible_nut
             authorized_keys: "{{ ansible_nut_keys }}"
+            oldauthorized_keys: "{{ oldansible_nut_keys }}"
+            sudo: false
             sudo_commands:
               - /usr/local/sbin/nut-pve-control
 
+# TODO make this a loop over the users and validate each one, but for now we will just copy the validation playbook twice, once for each user.
 - name: Verify the provisioned automation account
   ansible.builtin.import_playbook: validate-ansible-access-passwordless.yml
   vars:
     automation_validation_hosts: proxmox
     automation_expected_user: ansible_mgr
+
+- name: Verify the provisioned automation account
+  ansible.builtin.import_playbook: validate-ansible-access-passwordless.yml
+  vars:
+    automation_validation_hosts: proxmox
+    automation_expected_user: ansible_nut
+    automation_expected_user_ssh_key: ~/.ssh/id_ansible_nut
+    bootstrap_user_sudo: false
