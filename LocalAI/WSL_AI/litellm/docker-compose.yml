@@ -25,7 +25,7 @@ services:
     ports:
       - "127.0.0.1:4000:4000"
     volumes:
-      - ./config.yml:/app/config.yaml:ro
+      - ./lm_configs/config_slim.yml:/app/config.yaml:ro
     environment:
       LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:?Set LITELLM_MASTER_KEY in .env.local}
       LITELLM_SALT_KEY: ${LITELLM_SALT_KEY:?Set LITELLM_SALT_KEY in .env.local}
@@ -69,10 +69,13 @@ services:
     restart: unless-stopped
     environment:
       NVIDIA_VISIBLE_DEVICES: all
+
+      # RTX 3060 12GB
       OLLAMA_MAX_LOADED_MODELS: "1"
       OLLAMA_NUM_PARALLEL: "1"
-      OLLAMA_CONTEXT_LENGTH: "8192" # TODO - Make this configurable via .env.local
-      OLLAMA_KEEP_ALIVE: "5m"
+      OLLAMA_CONTEXT_LENGTH: "${OLLAMA_CONTEXT_LENGTH:-8192}"
+      OLLAMA_KEEP_ALIVE: "${OLLAMA_KEEP_ALIVE:-5m}"
+      OLLAMA_NO_CLOUD: "1"
     volumes:
       - ollama:/root/.ollama
       - ../../PicoModels/ModelFile:/ModelFile:ro

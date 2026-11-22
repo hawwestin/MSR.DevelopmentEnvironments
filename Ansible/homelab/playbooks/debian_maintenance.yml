@@ -1,6 +1,6 @@
 ---
 - name: Perform routine maintenance on Debian hosts
-  hosts: all
+  hosts: lxc
   become: true
   vars:
     # List the services you want to monitor for health checks
@@ -27,7 +27,7 @@
             name: "{{ item }}"
             state: started
           register: service_status
-          ignore_errors: yes
+          ignore_errors: true
           loop: "{{ services_to_check }}"
 
         - name: Report unhealthy services

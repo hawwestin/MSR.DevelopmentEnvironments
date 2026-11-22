@@ -1,0 +1,51 @@
+
+model_list:
+
+  # ==========================================
+  # AGENT - Cline
+  # ==========================================
+  - model_name: local-agent
+    litellm_params:
+      model: ollama_chat/nemotron-3.5-bolt:e4b
+      api_base: http://ollama:11434
+      keep_alive: 5m
+    model_info:
+      supports_function_calling: true
+
+  # ==========================================
+  # CODING - Continue
+  # ==========================================
+  - model_name: local-coding
+    litellm_params:
+      model: ollama_chat/qwen2.5-coder:7b
+      api_base: http://ollama:11434
+      keep_alive: 5m
+
+  # ==========================================
+  # AUTOCOMPLETE - Continue
+  # ==========================================
+  - model_name: local-autocomplete
+    litellm_params:
+      model: ollama_chat/qwen2.5-coder:1.5b
+      api_base: http://ollama:11434
+      keep_alive: 5m
+
+  # ==========================================
+  # GENERAL - opcjonalny model do testów
+  # ==========================================
+  - model_name: local-general
+    litellm_params:
+      model: ollama_chat/gemma4:e4b
+      api_base: http://ollama:11434
+      keep_alive: 5m
+
+  # ==========================================
+  # EMBEDDINGS
+  # ==========================================
+  - model_name: local-nomic-embed-text
+    litellm_params:
+      model: ollama/nomic-embed-text:latest
+      api_base: http://ollama:11434
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
