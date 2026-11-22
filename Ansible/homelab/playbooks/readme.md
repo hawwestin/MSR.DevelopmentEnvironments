@@ -28,7 +28,9 @@ ansible-playbook Ansible/homelab/playbooks/bootstrap_ansible_mgr.yml
 Verification
 ```bash
 ansible-playbook Ansible/homelab/playbooks/validate-ansible-access-passwordless.yml --limit new --check
-ansible-playbook Ansible/homelab/playbooks/validate-ansible-access-passwordless.yml --limit new -e automation_validation_hosts=new 
+ansible-playbook Ansible/homelab/playbooks/validate-ansible-access-passwordless.yml --limit new \
+-e automation_validation_hosts=new \
+-e automation_expected_user=ansible_mgr
 # password
 ansible-playbook Ansible/homelab/playbooks/validate-ansible-access-password.yml --limit pfsense -e automation_validation_hosts=vm
 ```
