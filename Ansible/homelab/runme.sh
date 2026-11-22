@@ -19,6 +19,6 @@ ansible new -m ping
 python3 Ansible/homelab/enroll-host-keys.py --dry-run
 python3 Ansible/homelab/enroll-host-keys.py
 # enroll SSH host keys for the VMs
-# python3 Ansible/homelab/enroll-host-keys.py --group VM --inventory Ansible/homelab/inventories/inventory.ini --known-hosts "$HOME/.ssh/known_hosts"
+python3 Ansible/homelab/enroll-host-keys.py --group new --inventory Ansible/homelab/inventories/inventory.ini --known-hosts "$HOME/.ssh/known_hosts"
 
 ansible-playbook Ansible/homelab/playbooks/validate-ansible-access-passwordless.yml --limit new -e automation_validation_hosts=new 

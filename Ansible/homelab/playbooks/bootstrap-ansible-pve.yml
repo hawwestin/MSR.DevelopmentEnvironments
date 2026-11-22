@@ -31,11 +31,11 @@
         linux_bootstrap_users:
           - name: ansible_mgr
             authorized_keys: "{{ ansible_mgr_keys }}"
-            oldauthorized_keys: "{{ oldansible_mgr_keys }}"
+            oldauthorized_keys: "{{ oldansible_mgr_keys | default([]) }}"
             sudo: true
           - name: ansible_nut
             authorized_keys: "{{ ansible_nut_keys }}"
-            oldauthorized_keys: "{{ oldansible_nut_keys }}"
+            oldauthorized_keys: "{{ oldansible_nut_keys | default([])  }}"
             sudo: false
             sudo_commands:
               - /usr/local/sbin/nut-pve-control

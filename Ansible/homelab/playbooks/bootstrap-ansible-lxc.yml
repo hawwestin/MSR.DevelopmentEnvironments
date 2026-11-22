@@ -1,0 +1,41 @@
+---
+- name: Bootstrap the automation account using root SSH on lxc hosts
+  hosts: lxc
+  gather_facts: false
+  serial: 1
+  any_errors_fatal: true
+  vars:
+    ansible_user: root
+    # TODO we should use ssh-key based authentication for root, but for now we will use the default_ansible_become_pass from the vault file.
+    ansible_password: "{{ default_ansible_become_pass | default('') }}"
+    ansible_ssh_private_key_file: ~/.ssh/id_rsa_windows
+    ansible_become: false
+    ansible_host_key_checking: true
+    ansible_ssh_args: >-
+      -o ControlMaster=no -o ControlPath=none -o StrictHostKeyChecking=yes
+      -o PreferredAuthentications=password,keyboard-interactive
+      -o PubkeyAuthentication=no
+  pre_tasks:
+    - name: Require the encrypted bootstrap password
+      ansible.builtin.assert:
+        that:
+          - default_ansible_become_pass is defined
+          - default_ansible_become_pass is string
+          - default_ansible_become_pass | length > 0
+        fail_msg: Set default_ansible_become_pass in the bootstrap Vault file.
+      no_log: true
+  roles:
+    - role: linux_bootstrap_ansible_accounts
+      vars:
+        linux_bootstrap_verify_sudo: true
+        linux_bootstrap_users:
+          - name: ansible_mgr
+            authorized_keys: "{{ ansible_mgr_keys }}"
+            oldauthorized_keys: "{{ oldansible_mgr_keys | default([]) }}"
+            sudo: true
+
+- name: Verify the provisioned automation account
+  ansible.builtin.import_playbook: validate-ansible-access-passwordless.yml
+  vars:
+    automation_validation_hosts: lxc
+    automation_expected_user: ansible_mgr
