@@ -1,5 +1,5 @@
 - name: Bootstrap a new Rocky Linux LXC (without requiring SSH in the container)
-  hosts: proxmox_server  # Specify the Proxmox host, NOT the container
+  hosts: proxmox  # Specify the Proxmox host, NOT the container
   gather_facts: no
   vars:
     vmid: 100 # Your container ID

@@ -1,7 +1,10 @@
 # Default Ansible access variables for all hosts. These can be overridden in host_vars or group_vars for specific hosts or groups.
 default_ansible_become_pass: "{{ vault_default_become_pass }}"
-ansible_user: ansible_mgr
+# ansible_user: ansible_mgr
 ansible_ssh_private_key_file: ~/.ssh/id_ansible
+
+vm_bootstrap_credentials_user: root
+vm_bootstrap_credentials_become_method: sudo
 
 # Reference Variables to vault variables
 nut_monitor_password: "{{ vault_nut_monitor_password }}"

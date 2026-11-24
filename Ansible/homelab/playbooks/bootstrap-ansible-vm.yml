@@ -1,0 +1,48 @@
+---
+- name: Bootstrap Linux VM automation using an existing administrator
+  hosts: lxc
+  gather_facts: false
+  serial: 1
+  any_errors_fatal: true
+  vars:
+    # vm_bootstrap_credentials zamiast tego używajmy Host_vars! ten yaml jest nie potrzebnie skomplikowany i niebezpieczny, bo może się zdarzyć że ktoś w vault doda hasło do roota i wtedy będzie ono używane zamiast tego z host_vars
+    ansible_user: "{{ vm_bootstrap_credentials_user | default('root')  }}"
+    ansible_password: "{{ default_ansible_become_pass | default('')  }}"
+    ansible_become: true
+    ansible_become_user: root
+    ansible_become_method: "{{ vm_bootstrap_credentials_become_method | default('sudo')}}"
+    ansible_become_flags: "{{ '-l' if ansible_become_method == 'su' else '-H -S -n' }}"
+    ansible_become_password: "{{ default_ansible_become_pass | default('') | string if ansible_become_method == 'su' else ansible_password }}"
+    ansible_host_key_checking: true
+    ansible_ssh_args: >-
+      -o ControlMaster=no -o ControlPath=none -o StrictHostKeyChecking=yes
+      -o PreferredAuthentications=password,keyboard-interactive
+      -o PubkeyAuthentication=no
+    linux_bootstrap_verify_sudo: true
+    linux_bootstrap_prepare_debian: "{{ ansible_become_method == 'su' }}"
+  pre_tasks:
+    - name: Require a non-root administrator and its password
+      ansible.builtin.assert:
+        that:
+          - vm_bootstrap_credentials_user is string
+          - vm_bootstrap_credentials_user | trim | length > 0
+          - ansible_password is string
+          - ansible_password | length > 0
+        fail_msg: Configure an existing non-root administrator and SSH password in the VM Vault file.
+      no_log: true
+      tags: [always]
+
+  roles:
+    - role: linux_bootstrap_ansible_accounts
+      vars:
+        linux_bootstrap_verify_sudo: true
+        linux_bootstrap_users:
+          - name: ansible_mgr
+            authorized_keys: "{{ ansible_mgr_keys }}"
+            oldauthorized_keys: "{{ oldansible_mgr_keys | default([]) }}"
+            sudo: true
+
+- name: Verify VM automation access
+  ansible.builtin.import_playbook: validate-ansible-access-passwordless.yml
+  vars:
+    automation_validation_hosts: lxc

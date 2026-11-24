@@ -2,7 +2,13 @@
 By Default rocky linux does not have SSHD enabled and condifured. 
 This is a manual commands run book. that later was transformed to role that use proxmox pct commands
 
+```bash
+ansible-playbook Ansible/homelab/playbooks/bootstrap_lxc_ansible_mgr.yml --limit "opti3050" \
+-e automation_lxcid=105
+```
+
 TODO 
+- NOW this does not work > Error executing command: [Errno 2] No such file or directory: b'pct'
 -  use proxmox dynamic inventory to automate lxc discovery within cluster. 
 
 ## Rocky linux prep

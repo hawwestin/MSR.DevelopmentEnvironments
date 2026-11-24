@@ -1,6 +1,8 @@
 # ansible_password: "{{ vault_ansible_mgr_password }}"
 # vault_bootstrap_root_password: "{{ vault_ansible_mgr_password }}"
 
+ansible_ssh_private_key_file: ~/.ssh/id_rsa_windows
+
 # TODO for Proxmox we may want to use different keys for the ansible_mgr and ansible_nut users. 
 # such passphrase protected keys can be used for the ansible_nut user.
 # For now we will use the same keys for both users.

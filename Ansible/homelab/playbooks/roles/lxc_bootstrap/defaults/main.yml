@@ -2,4 +2,4 @@
 # Default variables for the LXC bootstrap role
 lxc_vmid: ""
 lxc_ansible_user: "ansible_mgr"
-lxc_ansible_pub_key: ""
+lxc_ansible_pub_key: "{{ lookup('file', '~/.ssh/id_ansible.pub') }}"

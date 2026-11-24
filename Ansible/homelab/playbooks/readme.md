@@ -32,6 +32,10 @@ ansible-playbook Ansible/homelab/playbooks/validate-ansible-access-passwordless.
 -e automation_validation_hosts=new \
 -e automation_expected_user=ansible_mgr
 
+ansible-playbook Ansible/homelab/playbooks/validate-ansible-access-passwordless.yml --limit rpi_ups \
+-e automation_validation_hosts=malina \
+-e automation_expected_user=ansible_mgr
+
 ansible-playbook Ansible/homelab/playbooks/validate-ansible-access-passwordless.yml --limit opti3040 \
 -e automation_validation_hosts=proxmox \
 -e automation_expected_user=ansible_mgr

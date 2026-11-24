@@ -20,5 +20,18 @@ ansible-playbook Ansible/homelab/playbooks/bootstrap-ansible-lxc.yml --tags boot
 
 ansible-playbook Ansible/homelab/playbooks/bootstrap-ansible-lxc.yml --check --limit TestDebian  --diff
 ansible-playbook Ansible/homelab/playbooks/bootstrap-ansible-lxc.yml  --diff --limit TestDebian
+ansible-playbook Ansible/homelab/playbooks/bootstrap-ansible-lxc.yml  --diff --limit AnsibleForDevops
+
+```
+
+vm 
+```bash
+
+ansible-playbook Ansible/homelab/playbooks/bootstrap-ansible-vm.yml --list-hosts
+ansible-playbook Ansible/homelab/playbooks/bootstrap-ansible-vm.yml --syntax-check
+ansible-playbook Ansible/homelab/playbooks/bootstrap-ansible-vm.yml --tags bootstrap_preflight --limit TestDebian 
+
+ansible-playbook Ansible/homelab/playbooks/bootstrap-ansible-vm.yml --check --limit TestDebian  --diff
+ansible-playbook Ansible/homelab/playbooks/bootstrap-ansible-vm.yml  --diff --limit TestDebian
 
 ```
