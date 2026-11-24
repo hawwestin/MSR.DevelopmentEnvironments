@@ -86,3 +86,11 @@
   loop_control:
     loop_var: bootstrap_user
     label: "{{ bootstrap_user.name }}"
+
+- name: Ensure sudo policy removed for users without sudo privileges
+  ansible.builtin.file:
+    path: "/etc/sudoers.d/{{ bootstrap_user.name }}"
+    state: absent
+  when: >-
+    (!bootstrap_user.sudo | default(false) | bool) or
+    (!bootstrap_user.sudo_commands | default([]) | length == 0)
